@@ -1,0 +1,4 @@
+packages:
+  - "runtimes/web-r3f"
+  - "runtimes/web-r3f/apps/*"
+  - "runtimes/web-r3f/packages/*"

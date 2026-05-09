@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.vite/
+*.tsbuildinfo
+
+# Generated 3D exports (large, deterministic from source/)
+exports/web/*.glb
+exports/web/*.ksplat
+exports/web/*.splat
+exports/web/props/*.glb
+exports/unity/*.fbx
+exports/unity/textures/
+exports/unreal/*.fbx
+exports/apple/*.usdz
+exports/master/*.glb
+# Keep folder structure with .gitkeep files
+!exports/**/.gitkeep
+
+# Source captures (large media — use Git LFS or external storage)
+source/captures/photos/*
+source/captures/videos/*
+source/captures/raw-splats/*
+source/captures/raw-photogrammetry/*
+!source/captures/**/.gitkeep
+!source/captures/**/README.md
+
+# Blender autosave / backup
+*.blend1
+*.blend2
+*.blend@
+
+# Environment + secrets
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Unity (for runtimes/vrchat-unity/)
+runtimes/vrchat-unity/Library/
+runtimes/vrchat-unity/Temp/
+runtimes/vrchat-unity/Logs/
+runtimes/vrchat-unity/UserSettings/
+runtimes/vrchat-unity/obj/
+runtimes/vrchat-unity/Build/
+runtimes/vrchat-unity/Builds/
+runtimes/vrchat-unity/*.csproj
+runtimes/vrchat-unity/*.sln
+runtimes/vrchat-unity/.vs/
+
+# Hubs CE docker volumes
+runtimes/hubs/data/
+runtimes/hubs/storage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

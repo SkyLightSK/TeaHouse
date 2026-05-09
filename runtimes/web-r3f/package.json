@@ -1,0 +1,14 @@
+{
+  "name": "@teahouse/web-r3f",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Custom React Three Fiber runtime for the TeaHouse — browser client + Colyseus server + LiveKit spatial voice.",
+  "scripts": {
+    "dev": "concurrently -n client,server -c cyan,magenta \"pnpm -C apps/client dev\" \"pnpm -C apps/server dev\"",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

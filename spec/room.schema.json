@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://teahouse.local/schemas/room.schema.json",
+  "title": "TeaHouse Room Descriptor",
+  "description": "Runtime-agnostic descriptor of a 3D room. Consumed by every runtime adapter (web-r3f, spatial, hubs, vrchat) so the same authored content works everywhere.",
+  "type": "object",
+  "required": ["version", "id", "name", "scale", "up", "geometry", "spawnPoints"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "type": "string",
+      "description": "Semver of this room descriptor.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "id": {
+      "type": "string",
+      "description": "Stable machine-readable id (slug).",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable room name."
+    },
+    "scale": {
+      "type": "string",
+      "enum": ["meters", "centimeters", "feet"],
+      "description": "Units used in all positions/dimensions in this file."
+    },
+    "up": {
+      "type": "string",
+      "enum": ["+Y", "+Z"],
+      "description": "Up axis convention. glTF and Blender export conventions both end up +Y for web."
+    },
+    "dimensions": {
+      "type": "object",
+      "description": "Approximate bounding-box dimensions of the room (used for stub geometry and auto-camera framing).",
+      "properties": {
+        "width": { "type": "number", "minimum": 0 },
+        "length": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 }
+      },
+      "required": ["width", "length", "height"]
+    },
+    "geometry": {
+      "type": "object",
+      "description": "Sources for the room shell geometry.",
+      "properties": {
+        "shell": {
+          "$ref": "#/$defs/AssetRef",
+          "description": "Authoritative mesh shell (.glb). Required."
+        },
+        "splat": {
+          "$ref": "#/$defs/AssetRef",
+          "description": "Optional Gaussian Splat shell (.ksplat) for photoreal rendering. Falls back to shell on runtimes that do not support splats."
+        }
+      },
+      "required": ["shell"]
+    },
+    "spawnPoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/SpawnPoint" }
+    },
+    "sitPoints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SitPoint" }
+    },
+    "interactables": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Interactable" }
+    },
+    "lights": {
+      "type": "array",
+      "description": "Lights in addition to those baked into the glb shell. Useful for runtime-tweakable lights.",
+      "items": { "$ref": "#/$defs/Light" }
+    },
+    "ambientAudio": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/AmbientAudio" }
+    },
+    "portals": {
+      "type": "array",
+      "description": "Future: doorways to other rooms (cross-building).",
+      "items": { "$ref": "#/$defs/Portal" }
+    },
+    "rooms": {
+      "type": "array",
+      "description": "Sub-rooms of a single building. When present, the stub renderer boxes out each room individually instead of using the top-level dimensions. Each interactive item (spawn/sit/interactable/light) may carry an optional roomId field linking it to one of these rooms.",
+      "items": { "$ref": "#/$defs/Room" }
+    },
+    "doorways": {
+      "type": "array",
+      "description": "Openings in walls between two rooms (or between a room and the outside). The stub renderer skips wall geometry where doorways exist and renders step geometry where steps are specified.",
+      "items": { "$ref": "#/$defs/Doorway" }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Free-form metadata: source location, capture date, license, etc."
+    }
+  },
+  "$defs": {
+    "Vec3": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "AssetRef": {
+      "type": "object",
+      "required": ["src", "format"],
+      "properties": {
+        "src": { "type": "string", "description": "Path or URL to asset." },
+        "format": {
+          "type": "string",
+          "enum": ["glb", "gltf", "fbx", "usdz", "splat", "ksplat", "ply"]
+        },
+        "size": { "type": "integer", "minimum": 0, "description": "Byte size hint for preloaders." }
+      }
+    },
+    "SpawnPoint": {
+      "type": "object",
+      "required": ["id", "position", "rotationY"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/Vec3" },
+        "rotationY": {
+          "type": "number",
+          "description": "Yaw in degrees, applied directly as a Three.js Y-axis rotation. Coord convention: 0 = facing -Z (north / into the building); 90 = facing -X (west); 180 = facing +Z (south / outside); -90 (or 270) = facing +X (east)."
+        },
+        "priority": { "type": "integer", "default": 1 },
+        "roomId": { "type": "string", "description": "Optional id of the parent room (for runtime context like 'You are in: Tearoom')." }
+      }
+    },
+    "SitPoint": {
+      "type": "object",
+      "required": ["id", "position", "rotationY", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/Vec3" },
+        "rotationY": { "type": "number" },
+        "kind": {
+          "type": "string",
+          "enum": ["chair", "couch", "floor", "stool", "bench"]
+        },
+        "roomId": { "type": "string" }
+      }
+    },
+    "Interactable": {
+      "type": "object",
+      "required": ["id", "position", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "asset": { "$ref": "#/$defs/AssetRef", "description": "Optional separate prop asset; if omitted the object is part of the shell glb." },
+        "position": { "$ref": "#/$defs/Vec3" },
+        "rotationY": { "type": "number", "default": 0 },
+        "kind": {
+          "type": "string",
+          "enum": ["pickup", "toggle", "button", "door", "pour"]
+        },
+        "event": {
+          "type": "string",
+          "description": "Logical event id emitted on activation. Each runtime maps this to its own scripting layer."
+        },
+        "respawnAfter": {
+          "type": "number",
+          "description": "Seconds until pickup respawns at original position. 0 or absent = never."
+        },
+        "roomId": { "type": "string" }
+      }
+    },
+    "Light": {
+      "type": "object",
+      "required": ["id", "position", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/Vec3" },
+        "kind": { "type": "string", "enum": ["point", "spot", "directional", "area"] },
+        "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#ffffff" },
+        "intensity": { "type": "number", "default": 1 },
+        "distance": { "type": "number", "description": "Falloff distance for point/spot." },
+        "decay": { "type": "number", "default": 2 },
+        "castShadow": { "type": "boolean", "default": false },
+        "roomId": { "type": "string" }
+      }
+    },
+    "Room": {
+      "type": "object",
+      "description": "A sub-room of a multi-room building. Center-anchored on the XZ plane; floor and ceiling are computed from floorY + ceilingHeight.",
+      "required": ["id", "name", "center", "size", "floorY"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "name": { "type": "string", "description": "Human-readable label." },
+        "kind": {
+          "type": "string",
+          "description": "Optional category — drives stub material choice and runtime UI context.",
+          "enum": [
+            "tearoom",
+            "teabar",
+            "store",
+            "corridor",
+            "toilet",
+            "hall",
+            "entrance",
+            "spawn",
+            "lecture_hall",
+            "other"
+          ]
+        },
+        "center": {
+          "type": "array",
+          "description": "World XZ center of the room.",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "size": {
+          "type": "array",
+          "description": "[width along X, depth along Z] in scale units.",
+          "items": { "type": "number", "minimum": 0 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "floorY": { "type": "number", "description": "Y-coordinate of this room's floor (allows multi-level buildings)." },
+        "ceilingHeight": { "type": "number", "default": 2.8, "description": "Distance from floorY to ceiling." },
+        "wallColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Stub renderer wall color override." },
+        "floorColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Stub renderer floor color override." }
+      }
+    },
+    "Doorway": {
+      "type": "object",
+      "description": "An opening in a wall. The stub renderer subtracts this from the corresponding wall and (if 'steps' is set) renders step geometry.",
+      "required": ["id", "between", "position", "width"],
+      "properties": {
+        "id": { "type": "string" },
+        "between": {
+          "type": "array",
+          "description": "Two room ids, OR one room id and the literal string 'outside' for an exterior door.",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "position": {
+          "type": "array",
+          "description": "World XZ position of the doorway center.",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "width": { "type": "number", "minimum": 0, "default": 1.0, "description": "Doorway opening width in meters." },
+        "height": { "type": "number", "minimum": 0, "default": 2.0, "description": "Doorway opening height (top above lower floorY)." },
+        "steps": {
+          "type": "object",
+          "description": "Optional step transition between the two rooms (when their floorY differ).",
+          "required": ["count"],
+          "properties": {
+            "count": { "type": "integer", "minimum": 1 },
+            "rise": { "type": "number", "default": 0.15, "description": "Per-step rise in meters." },
+            "tread": { "type": "number", "default": 0.30, "description": "Per-step tread depth (along the travel direction) in meters." },
+            "direction": {
+              "type": "array",
+              "description": "Optional unit vector (dx, dz) pointing FROM the lower room toward the higher room. When present, steps run in this direction (used for diagonal staircases). When absent, the renderer picks an axis-aligned direction perpendicular to the doorway wall.",
+              "items": { "type": "number" },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "AmbientAudio": {
+      "type": "object",
+      "required": ["id", "src"],
+      "properties": {
+        "id": { "type": "string" },
+        "src": { "type": "string", "description": "Path to .ogg / .opus file." },
+        "volume": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+        "loop": { "type": "boolean", "default": true },
+        "global": { "type": "boolean", "default": false, "description": "If true, plays at fixed volume; if false, positional 3D audio." },
+        "position": { "$ref": "#/$defs/Vec3", "description": "Required when global=false." },
+        "radius": { "type": "number", "default": 5 }
+      }
+    },
+    "Portal": {
+      "type": "object",
+      "required": ["id", "position", "to"],
+      "properties": {
+        "id": { "type": "string" },
+        "position": { "$ref": "#/$defs/Vec3" },
+        "rotationY": { "type": "number", "default": 0 },
+        "to": { "type": "string", "description": "Target room id." }
+      }
+    }
+  }
+}

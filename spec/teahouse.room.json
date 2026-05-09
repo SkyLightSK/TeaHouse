@@ -1,0 +1,316 @@
+{
+  "$schema": "./room.schema.json",
+  "version": "0.8.0",
+  "id": "teahouse",
+  "name": "The Tea House",
+  "scale": "meters",
+  "up": "+Y",
+
+  "dimensions": {
+    "_comment": "Bounding box of the whole building.",
+    "width": 30,
+    "length": 14,
+    "height": 3.0
+  },
+
+  "geometry": {
+    "shell": { "src": "exports/web/teahouse.glb", "format": "glb" },
+    "splat": { "src": "exports/web/teahouse.ksplat", "format": "ksplat" }
+  },
+
+  "_layoutNotes": [
+    "Layout v0.8 — building south face at z=+1. Toilet enlarged to 3x3 (x:-1 to 2, z:-4 to -1).",
+    "D9 moved to z=-2: lecture_hall 4x3 (z:-5 to -2), lecture_hall_entry 4x3 (z:-2 to +1).",
+    "All south-facing rooms extended 1m further south."
+  ],
+
+  "rooms": [
+    {
+      "id": "tearoom",
+      "name": "Tearoom",
+      "kind": "tearoom",
+      "center": [-9.0, -7.5],
+      "size": [4.0, 7.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65,
+      "wallColor": "#dbc4a4",
+      "floorColor": "#5a3a26"
+    },
+    {
+      "id": "teabar",
+      "name": "Teabar",
+      "kind": "teabar",
+      "center": [-5.0, -8.0],
+      "size": [4.0, 6.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65,
+      "wallColor": "#d8c2a3",
+      "floorColor": "#5a3a26"
+    },
+    {
+      "id": "corridor_2_north",
+      "name": "Corridor 2 (north arm)",
+      "kind": "corridor",
+      "center": [-2.0, -8.0],
+      "size": [2.0, 6.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65
+    },
+    {
+      "id": "pre_teabar",
+      "name": "Pre-Teabar (square landing)",
+      "kind": "corridor",
+      "center": [-5.0, -4.5],
+      "size": [4.0, 1.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65
+    },
+    {
+      "id": "corridor_2_horiz",
+      "name": "Corridor 2 (horizontal arm)",
+      "kind": "corridor",
+      "center": [-0.5, -4.5],
+      "size": [5.0, 1.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65
+    },
+    {
+      "id": "accessories_store",
+      "name": "Accessories Store",
+      "kind": "store",
+      "center": [-7.0, -1.5],
+      "size": [8.0, 5.0],
+      "floorY": 0.15,
+      "ceilingHeight": 2.65
+    },
+    {
+      "id": "corridor",
+      "name": "Corridor (recessed)",
+      "kind": "corridor",
+      "center": [-1.5, 0.5],
+      "size": [3.0, 1.0],
+      "floorY": -0.30,
+      "ceilingHeight": 2.5
+    },
+    {
+      "id": "spawn",
+      "name": "Spawn / Entrance",
+      "kind": "entrance",
+      "center": [1.0, 0.0],
+      "size": [2.0, 2.0],
+      "floorY": 0.00,
+      "ceilingHeight": 2.8
+    },
+    {
+      "id": "toilet",
+      "name": "Toilet",
+      "kind": "toilet",
+      "center": [0.5, -2.5],
+      "size": [3.0, 3.0],
+      "floorY": 0.00,
+      "ceilingHeight": 2.6
+    },
+    {
+      "id": "books_hall",
+      "name": "Books Store Hall",
+      "kind": "hall",
+      "center": [8.0, -2.0],
+      "size": [12.0, 6.0],
+      "floorY": 0.00,
+      "ceilingHeight": 3.0
+    },
+    {
+      "id": "lecture_hall",
+      "name": "Lecture Hall (vestibule)",
+      "kind": "lecture_hall",
+      "center": [16.0, -3.5],
+      "size": [4.0, 3.0],
+      "floorY": 0.00,
+      "ceilingHeight": 3.0
+    },
+    {
+      "id": "lecture_hall_entry",
+      "name": "Lecture Hall Entry",
+      "kind": "lecture_hall",
+      "center": [16.0, -0.5],
+      "size": [4.0, 3.0],
+      "floorY": 0.00,
+      "ceilingHeight": 3.0
+    }
+  ],
+
+  "doorways": [
+    {
+      "id": "d_spawn_outside",
+      "_comment": "D0 — spawn south wall at z=+1.",
+      "between": ["spawn", "outside"],
+      "position": [1.0, 1.0],
+      "width": 1.0,
+      "height": 2.1
+    },
+    {
+      "id": "d_spawn_books",
+      "_comment": "D1 — spawn east wall (x=2) into books_hall.",
+      "between": ["spawn", "books_hall"],
+      "position": [2.0, 0.0],
+      "width": 0.9,
+      "height": 2.1
+    },
+    {
+      "id": "d_corridor_spawn",
+      "_comment": "S1 — shared wall at x=0 between corridor and spawn. 2 steps up east.",
+      "between": ["corridor", "spawn"],
+      "position": [0.0, 0.5],
+      "width": 1.0,
+      "height": 2.0,
+      "steps": { "count": 2, "rise": 0.15, "tread": 0.30 }
+    },
+    {
+      "id": "d_diag_corner",
+      "_comment": "S2 part 1 — notch at x=-3 between corridor and accessories.",
+      "between": ["corridor", "accessories_store"],
+      "position": [-3.0, 0.5],
+      "width": 1.0,
+      "height": 2.5
+    },
+    {
+      "id": "d_diag_stairs",
+      "_comment": "S2 part 2 — 3 diagonal steps, corridor up to accessories. Direction NW.",
+      "between": ["corridor", "accessories_store"],
+      "position": [-3.5, 0.0],
+      "width": 1.0,
+      "height": 2.5,
+      "steps": { "count": 3, "rise": 0.15, "tread": 0.70, "direction": [-0.7071, -0.7071] }
+    },
+    {
+      "id": "d_toilet_corr2",
+      "_comment": "D2 — toilet north wall (z=-4) into corridor_2_horiz. 1 step up north.",
+      "between": ["toilet", "corridor_2_horiz"],
+      "position": [0.5, -4.0],
+      "width": 0.8,
+      "height": 2.0,
+      "steps": { "count": 1, "rise": 0.15, "tread": 0.30 }
+    },
+    {
+      "id": "d_corr2_books",
+      "_comment": "D3 — shared wall at x=2 between corridor_2_horiz and books_hall. 1 step down east.",
+      "between": ["corridor_2_horiz", "books_hall"],
+      "position": [2.0, -4.5],
+      "width": 0.6,
+      "height": 2.0,
+      "steps": { "count": 1, "rise": 0.15, "tread": 0.30 }
+    },
+    {
+      "id": "d_preteabar_accessories",
+      "_comment": "D5 — pre_teabar south wall (z=-4) into accessories. Same y level.",
+      "between": ["pre_teabar", "accessories_store"],
+      "position": [-5.0, -4.0],
+      "width": 1.0,
+      "height": 2.0
+    },
+    {
+      "id": "d_teabar_preteabar",
+      "_comment": "D6 — teabar south wall (z=-5) into pre_teabar. Same y level.",
+      "between": ["teabar", "pre_teabar"],
+      "position": [-5.0, -5.0],
+      "width": 1.0,
+      "height": 2.0
+    },
+    {
+      "id": "d_preteabar_corr2",
+      "_comment": "D4 — pre_teabar east wall (x=-3) into corridor_2_horiz.",
+      "between": ["pre_teabar", "corridor_2_horiz"],
+      "position": [-3.0, -4.5],
+      "width": 0.8,
+      "height": 2.0
+    },
+    {
+      "id": "d_tearoom_teabar",
+      "_comment": "D7 — shared wall at x=-7, near the north end.",
+      "between": ["tearoom", "teabar"],
+      "position": [-7.0, -10.5],
+      "width": 1.0,
+      "height": 2.0
+    },
+    {
+      "id": "d_corr2_join",
+      "_comment": "Opening between corridor_2_north and corridor_2_horiz at z=-5.",
+      "between": ["corridor_2_north", "corridor_2_horiz"],
+      "position": [-2.0, -5.0],
+      "width": 2.0,
+      "height": 2.65
+    },
+    {
+      "id": "d_books_lectent",
+      "_comment": "D8 — books_hall east wall (x=14) into lecture_hall_entry.",
+      "between": ["books_hall", "lecture_hall_entry"],
+      "position": [14.0, -0.5],
+      "width": 1.2,
+      "height": 2.2
+    },
+    {
+      "id": "d_lect_lectent",
+      "_comment": "D9 — shared wall at z=-2 between lecture_hall and lecture_hall_entry.",
+      "between": ["lecture_hall", "lecture_hall_entry"],
+      "position": [16.0, -2.0],
+      "width": 1.0,
+      "height": 2.0
+    }
+  ],
+
+  "spawnPoints": [
+    {
+      "id": "entrance",
+      "position": [1.0, 0.0, 0.0],
+      "rotationY": 0,
+      "priority": 1,
+      "roomId": "spawn"
+    }
+  ],
+
+  "sitPoints": [
+    { "id": "tearoom_couch_west",   "position": [-10.5, 0.75, -8.5], "rotationY":  90, "kind": "couch", "roomId": "tearoom" },
+    { "id": "tearoom_couch_east",   "position": [-10.5, 0.75, -6.5], "rotationY":  90, "kind": "couch", "roomId": "tearoom" },
+    { "id": "tearoom_floor_seat_1", "position": [ -7.5, 0.15, -8.5], "rotationY": -90, "kind": "floor", "roomId": "tearoom" },
+    { "id": "tearoom_floor_seat_2", "position": [ -7.5, 0.15, -6.5], "rotationY": -90, "kind": "floor", "roomId": "tearoom" },
+    { "id": "teabar_stool_1",       "position": [ -5.5, 1.05, -9.0], "rotationY": 180, "kind": "stool", "roomId": "teabar" },
+    { "id": "teabar_stool_2",       "position": [ -5.0, 1.05, -9.0], "rotationY": 180, "kind": "stool", "roomId": "teabar" },
+    { "id": "teabar_stool_3",       "position": [ -4.5, 1.05, -9.0], "rotationY": 180, "kind": "stool", "roomId": "teabar" }
+  ],
+
+  "interactables": [
+    { "id": "teacup_1",    "position": [-9.2, 0.71, -7.5], "rotationY": 0, "kind": "pickup", "event": "drink", "respawnAfter": 30, "roomId": "tearoom" },
+    { "id": "teacup_2",    "position": [-8.8, 0.71, -7.5], "rotationY": 0, "kind": "pickup", "event": "drink", "respawnAfter": 30, "roomId": "tearoom" },
+    { "id": "teacup_3",    "position": [-9.0, 0.71, -7.8], "rotationY": 0, "kind": "pickup", "event": "drink", "respawnAfter": 30, "roomId": "tearoom" },
+    { "id": "teapot_main", "position": [-9.0, 0.75, -7.2], "rotationY": 0, "kind": "pour",   "event": "pour",  "respawnAfter": 60, "roomId": "tearoom" }
+  ],
+
+  "lights": [
+    { "id": "lantern_tearoom",       "position": [-9.0,  2.70, -7.5], "kind": "point", "color": "#ffb37a", "intensity": 6, "distance": 6,  "decay": 2, "roomId": "tearoom" },
+    { "id": "lantern_teabar",        "position": [-5.0,  2.70, -8.0], "kind": "point", "color": "#ffaa66", "intensity": 5, "distance": 6,  "decay": 2, "roomId": "teabar" },
+    { "id": "lantern_corr2_north",   "position": [-2.0,  2.70, -8.0], "kind": "point", "color": "#ffe0b8", "intensity": 3, "distance": 4,  "decay": 2, "roomId": "corridor_2_north" },
+    { "id": "lantern_preteabar",     "position": [-5.0,  2.70, -4.5], "kind": "point", "color": "#ffe0b8", "intensity": 3, "distance": 4,  "decay": 2, "roomId": "pre_teabar" },
+    { "id": "lantern_corr2_horiz",   "position": [-0.5,  2.70, -4.5], "kind": "point", "color": "#ffe0b8", "intensity": 3, "distance": 5,  "decay": 2, "roomId": "corridor_2_horiz" },
+    { "id": "lantern_accessories",   "position": [-7.0,  2.70, -1.5], "kind": "point", "color": "#ffd9a8", "intensity": 5, "distance": 6,  "decay": 2, "roomId": "accessories_store" },
+    { "id": "lantern_corridor",      "position": [-1.5,  2.10,  0.5], "kind": "point", "color": "#ffe0b8", "intensity": 3, "distance": 3,  "decay": 2, "roomId": "corridor" },
+    { "id": "lantern_spawn",         "position": [ 1.0,  2.70,  0.0], "kind": "point", "color": "#ffeed4", "intensity": 4, "distance": 4,  "decay": 2, "roomId": "spawn" },
+    { "id": "lantern_toilet",        "position": [ 0.5,  2.50, -2.5], "kind": "point", "color": "#fff0d8", "intensity": 3, "distance": 3,  "decay": 2, "roomId": "toilet" },
+    { "id": "lantern_books_hall_w",  "position": [ 5.0,  2.90, -2.0], "kind": "point", "color": "#fff0d8", "intensity": 6, "distance": 7,  "decay": 2, "roomId": "books_hall" },
+    { "id": "lantern_books_hall_e",  "position": [11.0,  2.90, -2.0], "kind": "point", "color": "#fff0d8", "intensity": 6, "distance": 7,  "decay": 2, "roomId": "books_hall" },
+    { "id": "lantern_lecture_hall",  "position": [16.0,  2.90, -3.5], "kind": "point", "color": "#fff0d8", "intensity": 4, "distance": 5,  "decay": 2, "roomId": "lecture_hall" },
+    { "id": "lantern_lecture_entry", "position": [16.0,  2.90, -0.5], "kind": "point", "color": "#fff0d8", "intensity": 4, "distance": 5,  "decay": 2, "roomId": "lecture_hall_entry" }
+  ],
+
+  "ambientAudio": [],
+
+  "metadata": {
+    "sourceLocation": "https://maps.app.goo.gl/uGfxcrumW2HSkJD68",
+    "capturedAt": null,
+    "license": "CC-BY-NC-4.0",
+    "floorPlan": "source/floorplan/teahouse-plan.png",
+    "asciiMap": "source/floorplan/teahouse-ascii-map.md",
+    "_notes": [
+      "Multi-room layout v0.8 — toilet 3x3, south face z=+1, D9 at z=-2, lecture rooms rebalanced."
+    ]
+  }
+}
