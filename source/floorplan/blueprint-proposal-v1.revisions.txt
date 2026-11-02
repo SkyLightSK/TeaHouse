@@ -1,0 +1,13 @@
+
+
+REVISION 1
+Edit this blueprint image with only these corrections, preserving its layout, room labels, dimensions, typography, and colors:
+1. Replace the entire TOP horizontal dimension chain (currently incorrectly showing ~7.7 m plus ~26 m) with ONE continuous overall dimension from the far LEFT external edge of the accessories/tearoom wing to the far RIGHT external edge of rear book area. Its only label is "~26 m conceptual fit — excluding wall thickness". No 7.7 m dimension at top.
+2. Remove the dashed opening between tearoom and vestibule (the vertical wall separating tearoom from vestibule). Draw a solid navy wall there. Only the existing upper tearoom-to-tea-bar opening is supported.
+3. Remove the door swing/opening from the lobby into the hatched UNVERIFIED SPACE or WC along the lobby's top/upper-left boundary. Make that boundary a solid wall; leave WC's dashed north opening toward corridor 2. Lobby must retain west lower-corridor opening, east bookshop opening, and south street-stair opening.
+4. The exterior stair passage extends DOWN the page from the lobby toward street. Reverse the arrows within this lower stair passage so they point DOWN toward street and label "UP TO STREET". Keep text "Run / total rise TBD" and "(Not to scale)".
+5. Remove decorative window-like blue strips inserted in external perimeter walls of all rooms; use uninterrupted solid navy perimeter walls except the explicit street entrance and the indicated possible onward exit from the rear area. Do not create new window locations.
+Everything else unchanged. This remains a schematic suggested plan, not a survey.
+
+REVISION 2
+Make exactly one correction to this blueprint: restore a clear approximately 0.9 m wide doorway with a door-swing arc in the HORIZONTAL wall BETWEEN the TEA BAR and the VESTIBULE immediately below it (the horizontal wall around x=260..440 pixels, y=400 pixels in this supplied 1536x1024 image). Center this doorway horizontally in that shared wall. It must connect the TEA BAR directly DOWN into VESTIBULE; this is a confirmed photographed passage. Leave the VERTICAL wall separating TEAROOM from VESTIBULE completely solid. Preserve EVERY OTHER line, label, room dimension, dimension string, wall opening, arrow, color, panel, and furniture symbol unchanged. Do not redesign any part of the drawing.

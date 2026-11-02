@@ -1,0 +1,93 @@
+{
+  "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYi1zS0E.",
+  "image_width": 10000,
+  "image_height": 5000,
+  "tile_width": 512,
+  "tile_height": 512,
+  "lat": 46.47921717984453,
+  "lng": 30.740971554693285,
+  "original_lat": 46.47921717984453,
+  "original_lng": 30.740971554693285,
+  "heading": 141.27,
+  "tilt": 90.0,
+  "roll": 0.0,
+  "date": "2017-11",
+  "copyright_info": "From the Owner, Photo by: Cube Online \u0423\u043a\u0440\u0430\u0457\u043d\u0430",
+  "address_components": [
+    {
+      "longName": "17",
+      "shortName": "17",
+      "types": [
+        "street_number"
+      ]
+    },
+    {
+      "longName": "Sviatoslava Karavanskoho Street",
+      "shortName": "Sviatoslava Karavanskoho St",
+      "types": [
+        "route"
+      ]
+    },
+    {
+      "longName": "Prymorskyi District",
+      "shortName": "Prymorskyi District",
+      "types": [
+        "political",
+        "sublocality",
+        "sublocality_level_1"
+      ]
+    },
+    {
+      "longName": "Odesa",
+      "shortName": "Odesa",
+      "types": [
+        "locality",
+        "political"
+      ]
+    },
+    {
+      "longName": "Odesa City Council",
+      "shortName": "Odesa City Council",
+      "types": [
+        "administrative_area_level_3",
+        "political"
+      ]
+    },
+    {
+      "longName": "Odes'ka oblast",
+      "shortName": "Odes'ka oblast",
+      "types": [
+        "administrative_area_level_1",
+        "political"
+      ]
+    },
+    {
+      "longName": "Ukraine",
+      "shortName": "UA",
+      "types": [
+        "country",
+        "political"
+      ]
+    },
+    {
+      "longName": "65000",
+      "shortName": "65000",
+      "types": [
+        "postal_code"
+      ]
+    }
+  ],
+  "report_problem_link": "https://cbks0.googleapis.com/cbk?output=report&panoid=CAoSFkNJSE0wb2dLRUlDQWdJQzQzYi1zS0E.&cb_client=api&cbp=1,0,,0,0&hl=en-US&gl=US",
+  "links": [
+    {
+      "panoId": "CAoSFkNJSE0wb2dLRUlDQWdJQzR2ZmprVFE.",
+      "heading": 276.2476806640625,
+      "text": ""
+    },
+    {
+      "panoId": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2WUNlc3dF",
+      "heading": 10.37980842590332,
+      "text": ""
+    }
+  ]
+}

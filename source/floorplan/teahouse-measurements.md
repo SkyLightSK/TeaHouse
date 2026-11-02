@@ -1,5 +1,7 @@
 # Tea House — Floor Plan & Measurements
 
+> **Reference update (2026-11-01):** a 23-view November 2017 panorama tour is now available. See [the photo comparison](panorama-comparison.md) for confirmed connections, contradictions, and unverified areas. The numeric dimensions below remain estimates.
+
 Source plan: [`teahouse-plan.png`](teahouse-plan.png) (editable Photoshop source: [`teahouse-plan.psd`](teahouse-plan.psd))
 
 Real-world reference: [Google Maps](https://maps.app.goo.gl/uGfxcrumW2HSkJD68)

@@ -1,5 +1,7 @@
 # Tea House — Canonical ASCII Floor Map (DRAFT)
 
+> **Reference update (2026-11-01):** see [the panorama comparison](panorama-comparison.md) before revising this draft. Its coordinate table, doorway table, drawing, and current JSON spec disagree in places; the new photographs verify some connections but do not establish metric dimensions.
+
 > **Status:** DRAFT — needs review and corrections from the user. Once this is
 > agreed upon, `spec/teahouse.room.json` and the runtime layout are regenerated
 > from it. Treat this file as the single source of truth for the building's

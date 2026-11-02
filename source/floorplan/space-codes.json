@@ -1,0 +1,202 @@
+{
+  "version": 3,
+  "units": "metres",
+  "note": "Reference-plan identifiers, not a replacement for runtime room IDs. All dimensions are unmeasured proposals.",
+  "spaces": [
+    {
+      "code": "TR",
+      "name": "Tearoom",
+      "proposed_size_m": [
+        3.5,
+        6.5
+      ],
+      "reference_views": [
+        "view-01",
+        "view-03"
+      ],
+      "status": "photographed; orientation corrected by user",
+      "measured": false
+    },
+    {
+      "code": "TB",
+      "name": "Tea bar",
+      "proposed_size_m": [
+        3.0,
+        5.0
+      ],
+      "reference_views": [
+        "view-02",
+        "view-04"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "PV",
+      "name": "Pre-bar vestibule",
+      "proposed_size_m": [
+        3.0,
+        1.5
+      ],
+      "reference_views": [
+        "view-05"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "AS",
+      "name": "Accessories shop",
+      "proposed_size_m": [
+        6.5,
+        5.5
+      ],
+      "reference_views": [
+        "view-06",
+        "view-07",
+        "view-08",
+        "view-09",
+        "view-10"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "LC",
+      "name": "Lower corridor",
+      "proposed_size_m": [
+        4.0,
+        1.2
+      ],
+      "reference_views": [
+        "view-11",
+        "view-12"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "LB",
+      "name": "Internal entrance lobby",
+      "proposed_size_m": [
+        2.0,
+        2.2
+      ],
+      "reference_views": [
+        "view-13",
+        "view-14"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "BK",
+      "name": "Bookshop hall",
+      "proposed_size_m": [
+        10.0,
+        5.5
+      ],
+      "reference_views": [
+        "view-16",
+        "view-18",
+        "view-20",
+        "view-21"
+      ],
+      "status": "photographed",
+      "measured": false
+    },
+    {
+      "code": "LH",
+      "name": "Lecture-hall entrance room",
+      "proposed_size_m": [
+        3.5,
+        5.5
+      ],
+      "reference_views": [
+        "view-20",
+        "view-21",
+        "view-22",
+        "view-23"
+      ],
+      "status": "enclosed room confirmed by user; lecture-hall sign visible in view-23; hall beyond unseen",
+      "measured": false,
+      "enclosing_walls": true
+    },
+    {
+      "code": "WC",
+      "name": "Toilet",
+      "proposed_size_m": [
+        2.0,
+        2.1
+      ],
+      "reference_views": [],
+      "status": "unverified",
+      "measured": false
+    },
+    {
+      "code": "C2N",
+      "name": "Corridor 2 north arm",
+      "proposed_size_m": [
+        1.2,
+        6.5
+      ],
+      "reference_views": [],
+      "status": "unverified; overlaps C2E at elbow",
+      "measured": false
+    },
+    {
+      "code": "C2E",
+      "name": "Corridor 2 east arm",
+      "proposed_size_m": [
+        6.0,
+        1.2
+      ],
+      "reference_views": [],
+      "status": "unverified; overlaps C2N at elbow",
+      "measured": false
+    },
+    {
+      "code": "U1",
+      "name": "Unverified central space",
+      "proposed_size_m": [
+        4.0,
+        3.1
+      ],
+      "reference_views": [],
+      "status": "diagram remainder; function unknown",
+      "measured": false
+    },
+    {
+      "code": "ST",
+      "name": "Street stair passage and landing",
+      "proposed_size_m": null,
+      "reference_views": [
+        "view-15",
+        "view-17"
+      ],
+      "status": "photographed; horizontal orientation supplied by user; rightward drawing direction provisional",
+      "measured": false,
+      "proposed_clear_width_m": 1.2,
+      "run_m": null,
+      "total_rise_m": null,
+      "plan_axis": "horizontal",
+      "drawn_ascent": "right; provisional"
+    },
+    {
+      "code": "OUT",
+      "name": "Open street reference zone",
+      "proposed_size_m": [
+        6.0,
+        3.0
+      ],
+      "reference_views": [
+        "view-17",
+        "view-19"
+      ],
+      "status": "outside street confirmed by user in view-19; selected modeling extent, not a measured boundary",
+      "measured": false,
+      "enclosing_walls": false,
+      "size_meaning": "selected reference crop"
+    }
+  ]
+}

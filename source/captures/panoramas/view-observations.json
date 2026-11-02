@@ -1,0 +1,234 @@
+[
+  {
+    "view_id": "view-01",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYi1zS0E.",
+    "observed_area": "Tearoom: seating and mirror",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "TR"
+    ]
+  },
+  {
+    "view_id": "view-02",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzR2ZmprVFE.",
+    "observed_area": "Tea bar: opening toward tearoom",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "TB"
+    ]
+  },
+  {
+    "view_id": "view-03",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2WUNlc3dF",
+    "observed_area": "Tearoom: sofa and carved screen",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "TR"
+    ]
+  },
+  {
+    "view_id": "view-04",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzQzWXY5aGdF",
+    "observed_area": "Tea bar: counter and vestibule doorway",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "TB"
+    ]
+  },
+  {
+    "view_id": "view-05",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzZWZXTnc.",
+    "observed_area": "Pre-bar vestibule: shop doorway and curtained opening",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "PV"
+    ]
+  },
+  {
+    "view_id": "view-06",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzR2WmlPZmc.",
+    "observed_area": "Accessories shop: doorway back to vestibule",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "AS"
+    ]
+  },
+  {
+    "view_id": "view-07",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2ZURMNXdF",
+    "observed_area": "Accessories shop: central displays",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "AS"
+    ]
+  },
+  {
+    "view_id": "view-08",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzR2YkNZVkE.",
+    "observed_area": "Accessories shop: display counters",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "AS"
+    ]
+  },
+  {
+    "view_id": "view-09",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzZGZLSlE.",
+    "observed_area": "Accessories shop: original requested cabinet viewpoint",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "AS"
+    ]
+  },
+  {
+    "view_id": "view-10",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzY3ZDSXc.",
+    "observed_area": "Accessories shop: stair threshold",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "AS"
+    ]
+  },
+  {
+    "view_id": "view-11",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYS1IV0E.",
+    "observed_area": "Lower corridor: three steps up to shop",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LC"
+    ]
+  },
+  {
+    "view_id": "view-12",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzZF91Vmc.",
+    "observed_area": "Lower corridor: toward entrance lobby",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LC"
+    ]
+  },
+  {
+    "view_id": "view-13",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYmVSWVE.",
+    "observed_area": "Entrance lobby: corridor threshold",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LB"
+    ]
+  },
+  {
+    "view_id": "view-14",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzZnVMUXc.",
+    "observed_area": "Entrance lobby: bookshop and street-stair branch",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LB"
+    ]
+  },
+  {
+    "view_id": "view-15",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYy1aRkE.",
+    "observed_area": "Entrance stair passage",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "ST"
+    ]
+  },
+  {
+    "view_id": "view-16",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2YkRhcndF",
+    "observed_area": "Bookshop: entrance from lobby",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "BK"
+    ]
+  },
+  {
+    "view_id": "view-17",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzQzY2ZLbXdF",
+    "observed_area": "Exterior entrance: top of stair passage",
+    "classification": "exterior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "ST",
+      "OUT"
+    ]
+  },
+  {
+    "view_id": "view-18",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzYy01Q2c.",
+    "observed_area": "Bookshop: central counters and shelving",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "BK"
+    ]
+  },
+  {
+    "view_id": "view-19",
+    "pano_id": "CAoSFkNJSE0wb2dLRUlDQWdJQzQzY191V0E.",
+    "observed_area": "Outside street (OUT)",
+    "classification": "exterior",
+    "confidence": "exterior confirmed by user; dimensions unmeasured",
+    "space_codes": [
+      "OUT"
+    ]
+  },
+  {
+    "view_id": "view-20",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2YWllb2dF",
+    "observed_area": "Bookshop: inner circulation",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "BK"
+    ]
+  },
+  {
+    "view_id": "view-21",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzQzZl91bUFF",
+    "observed_area": "BK-LH framed doorway / threshold",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "BK",
+      "LH"
+    ]
+  },
+  {
+    "view_id": "view-22",
+    "pano_id": "CAoSF0NJSE0wb2dLRUlDQWdJQzR2YkRhendF",
+    "observed_area": "Lecture-hall entrance room: lanterns, bookshelves and display cases",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LH"
+    ]
+  },
+  {
+    "view_id": "view-23",
+    "pano_id": "CAoSFENJSE0wb2dLRUlDQWdJQzQzZnN1",
+    "observed_area": "Lecture-hall entrance room: recessed door with Lecture hall sign",
+    "classification": "interior",
+    "confidence": "visual interpretation; dimensions unmeasured",
+    "space_codes": [
+      "LH"
+    ]
+  }
+]

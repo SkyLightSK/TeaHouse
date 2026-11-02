@@ -64,6 +64,7 @@ export function StubRoom({ spec }: Props) {
           key={r.id}
           room={r}
           doorways={spec.doorways ?? []}
+          allRooms={spec.rooms!}
           screenTex={r.kind === "tearoom" ? screenTex : null}
         />
       ))}
@@ -77,10 +78,12 @@ export function StubRoom({ spec }: Props) {
 function RoomGeometry({
   room,
   doorways,
+  allRooms,
   screenTex,
 }: {
   room: RoomDef;
   doorways: Doorway[];
+  allRooms: RoomDef[];
   screenTex: THREE.Texture | null;
 }) {
   const ceilingHeight = room.ceilingHeight ?? DEFAULT_CEILING;
@@ -114,15 +117,175 @@ function RoomGeometry({
   // WALL_THICK aligned along one axis.
   const walls = useMemo(() => buildWallSegments(room, doorways), [room, doorways]);
 
+  const stairwellData = useMemo(() => {
+    const results: {
+      cutout: { cx: number; cz: number; w: number; d: number };
+      lowerFloorY: number;
+      holeCorners: [number, number][];
+    }[] = [];
+    for (const dw of doorways) {
+      if (!dw.steps?.direction) continue;
+      if (!dw.between.includes(room.id)) continue;
+      const r1 = allRooms.find((r) => r.id === dw.between[0]);
+      const r2 = allRooms.find((r) => r.id === dw.between[1]);
+      if (!r1 || !r2) continue;
+      const isHigher = room.floorY >= Math.max(r1.floorY, r2.floorY);
+      if (!isHigher) continue;
+      const lower = r1.floorY < r2.floorY ? r1 : r2;
+      const [dx, dz] = dw.position;
+      const [vx, vz] = dw.steps.direction;
+      const nrm = Math.hypot(vx, vz) || 1;
+      const dirX = vx / nrm;
+      const dirZ = vz / nrm;
+      const perpX = -dirZ;
+      const perpZ = dirX;
+      const tread = dw.steps.tread ?? STEP_DEFAULT_TREAD;
+      const totalRun = dw.steps.count * tread;
+      const sCxAuto = dx + dirX * totalRun / 2;
+      const sCzAuto = dz + dirZ * totalRun / 2;
+      // ── Stairwell cutout: position & size (tweak these) ──
+      const cutOffsetX = 0.67;    // shift cutout in world X (+ = east)
+      const cutOffsetZ = 0.67;    // shift cutout in world Z (+ = south)
+      const sCx = sCxAuto + cutOffsetX;
+      const sCz = sCzAuto + cutOffsetZ;
+      const halfLen = totalRun / 2 + 1.5;   // half-length along stair direction (large so SE side reaches room edge)
+      const halfWid = dw.width / 2 + 0.1;   // half-width perpendicular to stair
+      // sCx, sCz = center of the staircase footprint in world coords
+      // dirX, dirZ = unit vector pointing NW (up the stairs)
+      // perpX, perpZ = unit vector perpendicular to stairs
+      const rL = room.center[0] - room.size[0] / 2;
+      const rR = room.center[0] + room.size[0] / 2;
+      const rT = room.center[1] - room.size[1] / 2;
+      const rB = room.center[1] + room.size[1] / 2;
+      const clamp = (x: number, z: number): [number, number] => [
+        Math.max(rL, Math.min(rR, x)),
+        Math.max(rT, Math.min(rB, z)),
+      ];
+      const holeCorners: [number, number][] = [
+        clamp(sCx - dirX * halfLen + perpX * halfWid, sCz - dirZ * halfLen + perpZ * halfWid),
+        clamp(sCx + dirX * halfLen + perpX * halfWid, sCz + dirZ * halfLen + perpZ * halfWid),
+        clamp(sCx + dirX * halfLen - perpX * halfWid, sCz + dirZ * halfLen - perpZ * halfWid),
+        clamp(sCx - dirX * halfLen - perpX * halfWid, sCz - dirZ * halfLen - perpZ * halfWid),
+      ];
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      for (const [hx, hz] of holeCorners) {
+        minX = Math.min(minX, hx); maxX = Math.max(maxX, hx);
+        minZ = Math.min(minZ, hz); maxZ = Math.max(maxZ, hz);
+      }
+      results.push({
+        cutout: {
+          cx: (minX + maxX) / 2,
+          cz: (minZ + maxZ) / 2,
+          w: maxX - minX + 0.02,
+          d: maxZ - minZ + 0.02,
+        },
+        lowerFloorY: lower.floorY,
+        holeCorners,
+      });
+    }
+    return results;
+  }, [room, doorways, allRooms]);
+
+  const floorCutouts = useMemo(
+    () => stairwellData.map((s) => s.cutout),
+    [stairwellData],
+  );
+
+  const floorSegments = useMemo(() => {
+    if (floorCutouts.length === 0) {
+      return [{ px: cx, pz: cz, sw: w, sd: d }];
+    }
+    const segs: { px: number; pz: number; sw: number; sd: number }[] = [];
+    for (const cut of floorCutouts) {
+      const cutLeft = cut.cx - cut.w / 2;
+      const cutRight = cut.cx + cut.w / 2;
+      const cutTop = cut.cz - cut.d / 2;
+      const cutBot = cut.cz + cut.d / 2;
+      const roomLeft = cx - w / 2;
+      const roomRight = cx + w / 2;
+      const roomTop = cz - d / 2;
+      const roomBot = cz + d / 2;
+      const leftW = cutLeft - roomLeft;
+      if (leftW > 0.01) segs.push({ px: roomLeft + leftW / 2, pz: cz, sw: leftW, sd: d });
+      const rightW = roomRight - cutRight;
+      if (rightW > 0.01) segs.push({ px: roomRight - rightW / 2, pz: cz, sw: rightW, sd: d });
+      const midLeft = Math.max(roomLeft, cutLeft);
+      const midRight = Math.min(roomRight, cutRight);
+      const midW = midRight - midLeft;
+      if (midW > 0.01) {
+        const topD = cutTop - roomTop;
+        if (topD > 0.01) segs.push({ px: (midLeft + midRight) / 2, pz: roomTop + topD / 2, sw: midW, sd: topD });
+        const botD = roomBot - cutBot;
+        if (botD > 0.01) segs.push({ px: (midLeft + midRight) / 2, pz: roomBot - botD / 2, sw: midW, sd: botD });
+      }
+    }
+    return segs.length > 0 ? segs : [{ px: cx, pz: cz, sw: w, sd: d }];
+  }, [cx, cz, w, d, floorCutouts]);
+
+  const floorHoleGeo = useMemo(() => {
+    if (stairwellData.length === 0) return null;
+
+    // Shape is defined in XY plane; after rotateX(-PI/2), shapeY maps to -Z.
+    // So we negate Z offsets: shapeY = -(worldZ - cz) to get correct world Z.
+    const shape = new THREE.Shape();
+    shape.moveTo(-halfW, halfD);
+    shape.lineTo(halfW, halfD);
+    shape.lineTo(halfW, -halfD);
+    shape.lineTo(-halfW, -halfD);
+    shape.closePath();
+
+    for (const sw of stairwellData) {
+      if (!sw.holeCorners || sw.holeCorners.length < 4) continue;
+      const hole = new THREE.Path();
+      hole.moveTo(sw.holeCorners[0][0] - cx, -(sw.holeCorners[0][1] - cz));
+      for (let j = 1; j < sw.holeCorners.length; j++) {
+        hole.lineTo(sw.holeCorners[j][0] - cx, -(sw.holeCorners[j][1] - cz));
+      }
+      hole.closePath();
+      shape.holes.push(hole);
+    }
+
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.1, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);
+    return geo;
+  }, [halfW, halfD, cx, cz, stairwellData]);
+
   return (
     <group>
-      {/* Floor with collider */}
-      <RigidBody type="fixed" colliders="cuboid">
-        <mesh receiveShadow position={[cx, floorY - 0.05, cz]}>
-          <boxGeometry args={[w, 0.1, d]} />
-          <primitive object={floorMat} attach="material" />
-        </mesh>
-      </RigidBody>
+      {/* Floor — with rotated 45° hole if stairwell exists, otherwise simple box */}
+      {floorHoleGeo ? (
+        <RigidBody type="fixed" colliders="trimesh">
+          <mesh receiveShadow position={[cx, floorY - 0.1, cz]}>
+            <primitive object={floorHoleGeo} attach="geometry" />
+            <primitive object={floorMat} attach="material" />
+          </mesh>
+        </RigidBody>
+      ) : (
+        <RigidBody type="fixed" colliders="cuboid">
+          <mesh receiveShadow position={[cx, floorY - 0.05, cz]}>
+            <boxGeometry args={[w, 0.1, d]} />
+            <primitive object={floorMat} attach="material" />
+          </mesh>
+        </RigidBody>
+      )}
+      {/* Stairwell: corridor-level floor under the steps + pit walls */}
+      {stairwellData.map((sw, i) => {
+        const pitDepth = floorY - sw.lowerFloorY;
+        return (
+          <group key={`stairwell-${i}`}>
+            <RigidBody type="fixed" colliders="cuboid">
+              <mesh receiveShadow position={[sw.cutout.cx, sw.lowerFloorY - 0.05, sw.cutout.cz]}>
+                <boxGeometry args={[sw.cutout.w, 0.1, sw.cutout.d]} />
+                <meshStandardMaterial color="#4a3520" roughness={0.85} />
+              </mesh>
+            </RigidBody>
+            <mesh position={[sw.cutout.cx, floorY - pitDepth / 2, sw.cutout.cz]}>
+              <boxGeometry args={[sw.cutout.w, pitDepth, sw.cutout.d]} />
+              <meshStandardMaterial color="#3b2a1d" roughness={0.9} side={THREE.BackSide} />
+            </mesh>
+          </group>
+        );
+      })}
 
       {/* Ceiling */}
       <mesh position={[cx, ceilingY, cz]}>
@@ -367,21 +530,21 @@ function DoorwaySteps({ doorway, rooms }: { doorway: Doorway; rooms: RoomDef[] }
 
   const elements: React.ReactElement[] = [];
   for (let i = 0; i < stepCount; i++) {
-    const stepY = lower.floorY + (i + 0.5) * rise;
+    const stepTop = lower.floorY + (i + 1) * rise;
+    const stepHeight = (i + 1) * rise;
     const distAlongStair = (i + 0.5) * tread;
     const x = dx + dirX * distAlongStair;
     const z = dz + dirZ * distAlongStair;
     elements.push(
       <RigidBody key={`${doorway.id}-step-${i}`} type="fixed" colliders="cuboid">
         <mesh
-          position={[x, stepY, z]}
+          position={[x, lower.floorY + stepHeight / 2, z]}
           rotation={[0, yaw, 0]}
           castShadow
           receiveShadow
         >
-          {/* width = perpendicular to travel; tread = along travel direction */}
-          <boxGeometry args={[stepWidth, rise, tread]} />
-          <meshStandardMaterial color="#4a3520" roughness={0.85} />
+          <boxGeometry args={[stepWidth, stepHeight, tread]} />
+          <meshStandardMaterial color="#8B6914" roughness={0.75} />
         </mesh>
       </RigidBody>,
     );

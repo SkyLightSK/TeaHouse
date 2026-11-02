@@ -1,0 +1,29 @@
+Edit the provided Terra Incognita blueprint into VERSION 2, retaining the same clear ivory/navy/cyan architectural drawing style and existing room footprints, dimensions, uncertainty shading, and general layout. Make the following corrections carefully. This is schematic, not surveyed. A little extra canvas height is allowed for the bottom street zone, but no unrelated redesign.
+
+A. CORRECT TEAROOM FURNISHING ORIENTATION:
+The folding screen is at the WRONG end in version 1. Remove the folding screen and its label from the TOP end of the TEAROOM. Put a clearly visible folding-screen zigzag at the BOTTOM end of the TEAROOM, with a small blue sofa against the bottom wall and a small low table next to it. Label that lower nook "Folding screen + sofa". The top end of the tearoom should be open circulation near its doorway. Keep the long bench on the left wall, with round tables and chairs in the long middle zone. Keep the existing tearoom-to-tea-bar doorway in the upper shared right wall. This corrects the seating nook end-to-end; do not move the room or rotate its entire walls. Do not add a door into the accessories shop. Preserve the tearoom's solid bottom wall.
+B. HORIZONTAL STREET STAIR FLIGHT:
+Remove the old vertical/down-page flight below the lobby. The lobby's bottom doorway should lead to a small landing, followed by a stair flight whose LONG AXIS is strictly HORIZONTAL, pointing RIGHT along the frontage, below the main building. Stair treads therefore are short VERTICAL strokes across the horizontal flight. A horizontal arrow points RIGHT and reads "UP TO STREET". The flight is approximately 1.2 m wide; its run/total rise remain TBD, schematic, not to scale. Never draw the flight pointing up or down the page. The landing can turn 90 degrees from the lobby doorway into this horizontal flight; the entire stair passage including landing has code ST.
+C. OPEN OUTSIDE ZONE:
+At the RIGHT/HIGH END of the horizontal stairs draw a SMALL OPEN STREET/PAVEMENT PATCH, approximately 6 x 3 m DISPLAY EXTENT, as a light-grey softly edged paving surface with a narrow road/asphalt strip. Code OUT, label "OPEN STREET ZONE", "~6 x 3 m display extent", "No enclosing walls", "Views 17, 19". This is a selected modeling extent, not measured street boundaries. NO navy perimeter walls, NO room enclosure, NO fence enclosing this patch. Draw a curb/pavement material transition if desired, not a wall. Street-level altitude is TBD. Do not connect this outside patch directly through the bookshop or rear area; sole illustrated route is lobby -> ST stairs -> OUT. The overall main-building ~26 m dimension excludes this external diagrammatic zone.
+D. SHORT STABLE SPACE CODES:
+Every identified space must prominently include its short code before its name. Exactly these codes, with readable labels:
+TR — TEAROOM
+TB — TEA BAR
+PV — VESTIBULE
+AS — ACCESSORIES SHOP
+LC — LOWER CORRIDOR
+LB — LOBBY
+BK — BOOKSHOP HALL
+LH — REAR BOOK AREA / PROBABLE LECTURE-HALL ENTRANCE
+WC — WC ? / UNSEEN
+C2N — CORRIDOR 2, NORTH ARM / UNVERIFIED (~1.2 m wide)
+C2E — CORRIDOR 2, EAST ARM / UNVERIFIED (~6.0 x 1.2 m)
+U1 — UNVERIFIED SPACE
+ST — STREET STAIRS + LANDING
+OUT — OPEN STREET ZONE
+The codes identify spaces; existing numerical View references identify photographs. Preserve those view numbers. Make code labels fit cleanly without overlapping dimensions or furniture.
+E. LEGEND / NOTES:
+Retain the existing prominent "All dimensions approximate" and "NOT A MEASURED SURVEY" notices, plan-up geographic north unverified, room dimensions, provisional heights and levels. Add a compact note "Codes = spaces; View numbers = photographs". Retain solid blue photographed rooms versus dashed amber uncertain spaces. Exterior patch uses pale grey open shading, not a boxed room. Add note "Horizontal stair direction: provisional diagram placement".
+Change footer to "Proposal v2 • For visual reconstruction in Blender • Do not use for construction".
+Preserve the doorway TEA BAR -> VESTIBULE and VESTIBULE -> ACCESSORIES SHOP. Preserve the correct photograph-supported main route. Keep no door between tearoom and vestibule, no door between lobby and WC/unknown area. Preserve rear room label as probable, not confirmed lecture hall. Check the screen is ONLY at the bottom end of TR and stairs point horizontally RIGHT before completing.

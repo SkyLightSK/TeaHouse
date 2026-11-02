@@ -101,11 +101,11 @@ When all boxes are checked we move on to the next sharp goal.
 
 ## Parallel track — asset acquisition
 
-The drink-tea goal works on stub geometry. Replacing the stubs with the real tea house runs in parallel and has its own dedicated roadmap: see [`source/ASSETS-PLAN.md`](source/ASSETS-PLAN.md).
+The drink-tea goal works on stub geometry. Replacing the stubs with the real tea house runs in parallel and has its own dedicated roadmap: see `[source/ASSETS-PLAN.md](source/ASSETS-PLAN.md)`.
 
 The asset roadmap currently centers on:
 
-- ~~Reverse-engineering a **floor plan** from existing photos + tape measurements (the *skeleton*)~~ — **done**, see [`source/floorplan/`](source/floorplan/)
+- ~~Reverse-engineering a **floor plan** from existing photos + tape measurements (the *skeleton*)~~ — **done**, see `[source/floorplan/](source/floorplan/)`
 - Extracting the **Google Maps Street View 360** as an environment map (the *lighting*)
 - Generating **props via Hunyuan 3D and Tripo 3D** from photos (the *furniture*)
 - Composing everything in Blender → `exports/web/teahouse.glb`
@@ -114,7 +114,7 @@ When that lands, swap `<StubRoom>` for `<GlbRoom>` in `Scene.tsx` — one-line c
 
 ## Subsequent goals (queued, not started)
 
-1. **Real geometry** — driven by [`source/ASSETS-PLAN.md`](source/ASSETS-PLAN.md); replace stub room with `teahouse.glb` (+ optional `.ksplat`)
+1. **Real geometry** — driven by `[source/ASSETS-PLAN.md](source/ASSETS-PLAN.md)`; replace stub room with `teahouse.glb` (+ optional `.ksplat`)
 2. **VPS deployment** — Hetzner CX22 + Caddy + systemd; `deploy.sh` from laptop
 3. **Spatial voice live** — finish LiveKit Cloud setup, verify HRTF positional audio
 4. **Ready Player Me avatars** — replace capsules with real avatars
@@ -130,5 +130,5 @@ When the goal shifts, edit the **"Immediate goal"** and **"Definition of done"**
 
 - **2026-05-09** — Initial goal set: interactive tea cups, drink tea. Repo and stub runtime were green at this point.
 - **2026-05-09** — Asset acquisition roadmap drafted at `source/ASSETS-PLAN.md`: floor plan from photos + tape, Google Street View 360 as environment map, Hunyuan 3D + Tripo 3D for props. Parallel track to the drink-tea goal.
-- **2026-05-09** — Floor plan acquired ([`source/floorplan/teahouse-plan.png`](source/floorplan/teahouse-plan.png)). Discovered the tea house is a **multi-room building** (tearoom, teabar, accessories store, two corridors at different floor levels, toilet, books store hall, lecture hall entrance) with a recessed corridor (2 steps down from spawn, 3 steps up to accessories store). Schema extended with `rooms[]` and `doorways[]` (with optional `steps`); spec rewritten with all 9 rooms; `StubRoom.tsx` now renders the multi-room layout with walls split by doorways and visible step geometry. Tearoom is the interaction hub — teacups + teapot live there per [`source/floorplan/teahouse-measurements.md`](source/floorplan/teahouse-measurements.md).
+- **2026-05-09** — Floor plan acquired (`[source/floorplan/teahouse-plan.png](source/floorplan/teahouse-plan.png)`). Discovered the tea house is a **multi-room building** (tearoom, teabar, accessories store, two corridors at different floor levels, toilet, books store hall, lecture hall entrance) with a recessed corridor (2 steps down from spawn, 3 steps up to accessories store). Schema extended with `rooms[]` and `doorways[]` (with optional `steps`); spec rewritten with all 9 rooms; `StubRoom.tsx` now renders the multi-room layout with walls split by doorways and visible step geometry. Tearoom is the interaction hub — teacups + teapot live there per `[source/floorplan/teahouse-measurements.md](source/floorplan/teahouse-measurements.md)`.
 
