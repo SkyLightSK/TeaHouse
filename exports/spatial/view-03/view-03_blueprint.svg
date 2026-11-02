@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="100%" height="100%">
+  <defs>
+    <style>
+      .wall-line { stroke: #38bdf8; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 3px #0284c7); }
+      .grid-line { stroke: #334155; stroke-width: 0.8; stroke-dasharray: 4,4; }
+      .camera-marker { fill: #f43f5e; stroke: #ffffff; stroke-width: 1.5; }
+      .text-label { fill: #94a3b8; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 14px; }
+    </style>
+  </defs>
+  <image href="bev_density_bg.png" width="800" height="800" />
+  <line x1="0" y1="0" x2="0" y2="800" class="grid-line" />
+  <line x1="0" y1="799" x2="800" y2="799" class="grid-line" />
+  <text x="4" y="20" class="text-label">-8m</text>
+  <text x="6" y="795" class="text-label">-8m</text>
+  <line x1="49" y1="0" x2="49" y2="800" class="grid-line" />
+  <line x1="0" y1="749" x2="800" y2="749" class="grid-line" />
+  <line x1="99" y1="0" x2="99" y2="800" class="grid-line" />
+  <line x1="0" y1="699" x2="800" y2="699" class="grid-line" />
+  <text x="103" y="20" class="text-label">-6m</text>
+  <text x="6" y="695" class="text-label">-6m</text>
+  <line x1="149" y1="0" x2="149" y2="800" class="grid-line" />
+  <line x1="0" y1="649" x2="800" y2="649" class="grid-line" />
+  <line x1="199" y1="0" x2="199" y2="800" class="grid-line" />
+  <line x1="0" y1="599" x2="800" y2="599" class="grid-line" />
+  <text x="203" y="20" class="text-label">-4m</text>
+  <text x="6" y="595" class="text-label">-4m</text>
+  <line x1="249" y1="0" x2="249" y2="800" class="grid-line" />
+  <line x1="0" y1="549" x2="800" y2="549" class="grid-line" />
+  <line x1="299" y1="0" x2="299" y2="800" class="grid-line" />
+  <line x1="0" y1="499" x2="800" y2="499" class="grid-line" />
+  <text x="303" y="20" class="text-label">-2m</text>
+  <text x="6" y="495" class="text-label">-2m</text>
+  <line x1="349" y1="0" x2="349" y2="800" class="grid-line" />
+  <line x1="0" y1="449" x2="800" y2="449" class="grid-line" />
+  <line x1="399" y1="0" x2="399" y2="800" class="grid-line" />
+  <line x1="0" y1="399" x2="800" y2="399" class="grid-line" />
+  <text x="403" y="20" class="text-label">0m</text>
+  <text x="6" y="395" class="text-label">0m</text>
+  <line x1="449" y1="0" x2="449" y2="800" class="grid-line" />
+  <line x1="0" y1="349" x2="800" y2="349" class="grid-line" />
+  <line x1="499" y1="0" x2="499" y2="800" class="grid-line" />
+  <line x1="0" y1="299" x2="800" y2="299" class="grid-line" />
+  <text x="503" y="20" class="text-label">2m</text>
+  <text x="6" y="295" class="text-label">2m</text>
+  <line x1="549" y1="0" x2="549" y2="800" class="grid-line" />
+  <line x1="0" y1="249" x2="800" y2="249" class="grid-line" />
+  <line x1="599" y1="0" x2="599" y2="800" class="grid-line" />
+  <line x1="0" y1="199" x2="800" y2="199" class="grid-line" />
+  <text x="603" y="20" class="text-label">4m</text>
+  <text x="6" y="195" class="text-label">4m</text>
+  <line x1="649" y1="0" x2="649" y2="800" class="grid-line" />
+  <line x1="0" y1="149" x2="800" y2="149" class="grid-line" />
+  <line x1="699" y1="0" x2="699" y2="800" class="grid-line" />
+  <line x1="0" y1="99" x2="800" y2="99" class="grid-line" />
+  <text x="703" y="20" class="text-label">6m</text>
+  <text x="6" y="95" class="text-label">6m</text>
+  <line x1="749" y1="0" x2="749" y2="800" class="grid-line" />
+  <line x1="0" y1="49" x2="800" y2="49" class="grid-line" />
+  <line x1="799" y1="0" x2="799" y2="800" class="grid-line" />
+  <line x1="0" y1="0" x2="800" y2="0" class="grid-line" />
+  <text x="803" y="20" class="text-label">8m</text>
+  <text x="6" y="-4" class="text-label">8m</text>
+  <circle cx="399" cy="399" r="6" class="camera-marker" />
+  <text x="409" y="403" fill="#f43f5e" font-weight="bold" font-family="monospace" font-size="13">CAM (0,0)</text>
+  <line x1="334.0" y1="40.0" x2="441.0" y2="40.0" class="wall-line" />
+  <line x1="207.0" y1="537.0" x2="268.0" y2="367.0" class="wall-line" />
+  <line x1="279.0" y1="39.0" x2="350.0" y2="39.0" class="wall-line" />
+  <line x1="218.0" y1="497.0" x2="274.0" y2="324.0" class="wall-line" />
+  <line x1="442.0" y1="39.0" x2="553.0" y2="40.0" class="wall-line" />
+  <line x1="383.0" y1="42.0" x2="440.0" y2="42.0" class="wall-line" />
+  <line x1="578.0" y1="507.0" x2="590.0" y2="640.0" class="wall-line" />
+  <line x1="273.0" y1="333.0" x2="284.0" y2="250.0" class="wall-line" />
+  <line x1="335.0" y1="42.0" x2="376.0" y2="41.0" class="wall-line" />
+  <line x1="477.0" y1="38.0" x2="578.0" y2="38.0" class="wall-line" />
+  <line x1="580.0" y1="491.0" x2="588.0" y2="587.0" class="wall-line" />
+  <line x1="517.0" y1="369.0" x2="519.0" y2="418.0" class="wall-line" />
+  <line x1="522.0" y1="366.0" x2="528.0" y2="409.0" class="wall-line" />
+  <line x1="199.0" y1="557.0" x2="220.0" y2="489.0" class="wall-line" />
+  <line x1="268.0" y1="334.0" x2="276.0" y2="269.0" class="wall-line" />
+  <line x1="586.0" y1="599.0" x2="588.0" y2="625.0" class="wall-line" />
+  <line x1="568.0" y1="457.0" x2="578.0" y2="509.0" class="wall-line" />
+  <line x1="227.0" y1="483.0" x2="251.0" y2="417.0" class="wall-line" />
+  <line x1="498.0" y1="39.0" x2="597.0" y2="40.0" class="wall-line" />
+  <line x1="571.0" y1="451.0" x2="579.0" y2="486.0" class="wall-line" />
+  <line x1="226.0" y1="475.0" x2="246.0" y2="413.0" class="wall-line" />
+  <line x1="589.0" y1="603.0" x2="592.0" y2="640.0" class="wall-line" />
+  <line x1="277.0" y1="298.0" x2="281.0" y2="267.0" class="wall-line" />
+  <line x1="475.0" y1="364.0" x2="497.0" y2="389.0" class="wall-line" />
+  <!-- Compass -->
+  <g transform="translate(740, 60)">
+    <circle r="30" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+    <polygon points="0,-22 7,-4 0,-10 -7,-4" fill="#f43f5e" />
+    <polygon points="0,22 7,4 0,10 -7,4" fill="#64748b" />
+    <text x="-4" y="-8" fill="#f43f5e" font-size="11" font-weight="bold" font-family="sans-serif">N</text>
+  </g>
+</svg>

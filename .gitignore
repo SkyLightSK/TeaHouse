@@ -20,6 +20,9 @@ exports/unity/textures/
 exports/unreal/*.fbx
 exports/apple/*.usdz
 exports/master/*.glb
+# Heavy spatial point cloud captures (>50MB, generated from tools/pano_depth_bev.py)
+exports/spatial/**/*_metric_cloud.ply
+exports/spatial/**/unified_rooms_cloud.ply
 # Keep folder structure with .gitkeep files
 !exports/**/.gitkeep
 

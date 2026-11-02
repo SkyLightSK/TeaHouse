@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeaHouse — Interactive 3D Space &amp; Architectural Walkthrough</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.88);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.3);
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    
+    /* Top Floating HUD */
+    .hud-header {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      backdrop-filter: blur(14px);
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      max-width: 440px;
+    }
+    .hud-header h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hud-header p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    
+    /* Room Quick-Jump Bar */
+    .room-bar {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      padding: 6px 14px;
+      border-radius: 30px;
+      display: flex;
+      gap: 6px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .room-pill {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .room-pill:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+    .room-pill.active {
+      background: var(--accent);
+      color: #090d16;
+      font-weight: 700;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .room-pill.hero {
+      border-color: rgba(56, 189, 248, 0.4);
+      color: var(--accent);
+    }
+
+    /* Control Toolbar */
+    .toolbar {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      backdrop-filter: blur(16px);
+      padding: 10px 18px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tool-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 7px 13px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tool-btn:hover {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .tool-btn.active {
+      background: var(--accent);
+      color: #090d16;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .slider-group input[type="range"] {
+      width: 80px;
+      accent-color: var(--accent);
+    }
+    
+    /* Stats & Info badge */
+    .stats-badge {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(14px);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .stats-badge span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    /* Navigation Helper */
+    .nav-hints {
+      position: absolute;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+    }
+    
+    #loading-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #090d16;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.4s ease;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+</head>
+<body>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top: 14px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+      Streaming Unified Venue 3D Point Cloud (509k Points)...
+    </p>
+  </div>
+
+  <div class="hud-header">
+    <div style="font-size: 0.7rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">
+      Reality Capture &bull; Complete Venue 3D
+    </div>
+    <h1>TeaHouse 3D Space Viewer</h1>
+    <p id="view-desc">Inside the Tearoom: Standing at (0, 1.5, 0) looking at the carved screen and doorway.</p>
+  </div>
+
+  <!-- Room Quick Teleport Bar -->
+  <div class="room-bar">
+    <button class="room-pill hero active" onclick="teleportRoom('VENUE')">🌐 Entire Venue</button>
+    <button class="room-pill" onclick="teleportRoom('TR')">TR: Tearoom</button>
+    <button class="room-pill" onclick="teleportRoom('TB')">TB: Tea Bar</button>
+    <button class="room-pill" onclick="teleportRoom('PV')">PV: Vestibule</button>
+    <button class="room-pill" onclick="teleportRoom('AS')">AS: Shop</button>
+    <button class="room-pill" onclick="teleportRoom('LC')">LC: Corridor</button>
+    <button class="room-pill" onclick="teleportRoom('LB')">LB: Lobby</button>
+    <button class="room-pill" onclick="teleportRoom('ST')">ST: Stairs</button>
+    <button class="room-pill" onclick="teleportRoom('BK')">BK: Bookshop</button>
+    <button class="room-pill" onclick="teleportRoom('LH')">LH: Lecture Hall</button>
+  </div>
+
+  <div class="stats-badge" id="stats">
+    View: <span id="stat-view">Entire Venue</span> | Points: <span id="stat-points">509,486</span>
+  </div>
+
+  <div class="nav-hints">
+    🖱️ Left Click + Drag to Look Around &bull; Right Click to Pan &bull; Scroll to Zoom
+  </div>
+
+  <div class="toolbar">
+    <!-- Display Layers -->
+    <div class="tool-group">
+      <button class="tool-btn active" id="btn-cad" onclick="toggleCAD()">Clean CAD Walls: ON</button>
+      <button class="tool-btn active" id="btn-scan" onclick="toggleScan()">Scan Points: ON</button>
+    </div>
+
+    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+
+    <!-- Perspective Modes -->
+    <div class="tool-group">
+      <button class="tool-btn" id="btn-inside" onclick="setViewMode('inside')">Inside Eye-Level</button>
+      <button class="tool-btn active" id="btn-dollhouse" onclick="setViewMode('dollhouse')">Dollhouse 3D</button>
+    </div>
+
+    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
+
+    <!-- Point Size Slider -->
+    <div class="slider-group">
+      <span>PTS:</span>
+      <input type="range" id="size-slider" min="1" max="5" value="1.8" step="0.2" oninput="updatePointSize(this.value)">
+      <span id="size-val">1.8</span>
+    </div>
+
+    <div class="tool-group">
+      <button class="tool-btn active" id="btn-rgb" onclick="setColorMode('rgb')">Photo RGB</button>
+      <button class="tool-btn" id="btn-height" onclick="setColorMode('height')">Elevation</button>
+    </div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    let scene, camera, renderer, controls;
+    let pointCloud = null;
+    let originalColors = null;
+    let heightColors = null;
+    let pointMaterial = null;
+    let cadGroup = null;
+    let showCAD = true;
+    let showScan = true;
+    let currentMode = 'dollhouse';
+    let currentColorMode = 'rgb';
+    let currentRoomCode = 'VENUE';
+
+    // The 9 Measured Architectural Rooms in 100% Shared Global Coordinates
+    const architecturalRooms = {
+      'VENUE': {
+        name: 'Entire Venue',
+        desc: 'Complete 23-panorama reality capture. 9 rooms spanning 40.1m x 26.0m.',
+        cam: [-13.0, 32.0, -18.0],
+        look: [-13.0, 1.0, 10.0],
+        insideCam: [0.0, 1.5, 0.0],
+        insideLook: [2.5, 1.4, 0.2]
+      },
+      'TR': {
+        name: 'Tearoom',
+        desc: 'Tearoom: 6.0m x 7.0m. Seating, sofa, and carved screen along East wall.',
+        x: [-2.2, 3.8], z: [-2.8, 4.2], fl: 0.0, h: 2.8,
+        insideCam: [0.0, 1.5, 0.0], insideLook: [2.5, 1.4, 0.2],
+        dollhouseCam: [0.8, 8.5, -4.5], dollhouseLook: [0.8, 1.0, 0.7],
+        color: 0x0284c7
+      },
+      'TB': {
+        name: 'Tea Bar',
+        desc: 'Tea Bar: 4.0m x 6.0m. Serving counter running North-South, connecting to vestibule.',
+        x: [-5.8, -1.8], z: [-1.2, 4.8], fl: 0.0, h: 2.8,
+        insideCam: [-2.8, 1.5, 0.3], insideLook: [-2.8, 1.4, 3.5],
+        dollhouseCam: [-3.8, 8.5, -3.5], dollhouseLook: [-3.8, 1.0, 1.8],
+        color: 0x0ea5e9
+      },
+      'PV': {
+        name: 'Pre-Bar Vestibule',
+        desc: 'Vestibule: 3.2m x 3.2m. Intermediate transition with lit display niche.',
+        x: [-4.4, -1.2], z: [4.6, 7.8], fl: 0.0, h: 2.8,
+        insideCam: [-2.55, 1.5, 6.22], insideLook: [-2.0, 1.4, 8.5],
+        dollhouseCam: [-2.8, 7.0, 2.5], dollhouseLook: [-2.8, 1.0, 6.2],
+        color: 0x38bdf8
+      },
+      'AS': {
+        name: 'Accessories Shop',
+        desc: 'Accessories Shop: 6.6m x 8.8m retail hall. 5 camera positions, display stands.',
+        x: [-3.8, 2.8], z: [7.4, 16.2], fl: 0.15, h: 3.0,
+        insideCam: [-0.5, 1.65, 11.8], insideLook: [0.0, 1.5, 14.5],
+        dollhouseCam: [-0.5, 12.0, 6.0], dollhouseLook: [-0.5, 1.5, 11.8],
+        color: 0x14b8a6
+      },
+      'LC': {
+        name: 'Lower Corridor',
+        desc: 'Lower Corridor: 7.2m x 3.5m passage. 3 steps up to shop, 2 steps up to lobby.',
+        x: [-9.5, -3.4], z: [15.2, 18.0], fl: -0.30, h: 2.6,
+        insideCam: [-6.0, 1.2, 16.5], insideLook: [-9.0, 1.3, 16.5],
+        dollhouseCam: [-6.5, 8.0, 11.5], dollhouseLook: [-6.5, 1.0, 16.6],
+        color: 0x6366f1
+      },
+      'LB': {
+        name: 'Entrance Lobby',
+        desc: 'Entrance Lobby: 5.8m x 3.8m circulation hub. Branch to bookshop & street stairs.',
+        x: [-14.8, -9.0], z: [14.0, 17.8], fl: 0.0, h: 2.8,
+        insideCam: [-11.5, 1.5, 16.0], insideLook: [-14.5, 1.5, 15.5],
+        dollhouseCam: [-11.9, 8.5, 10.5], dollhouseLook: [-11.9, 1.0, 15.9],
+        color: 0x8b5cf6
+      },
+      'ST': {
+        name: 'Stair Passage',
+        desc: 'Stair Passage: 4.7m x 3.2m. 6 steps leading up to exterior street portal.',
+        x: [-16.2, -11.5], z: [17.4, 20.6], fl: 0.50, h: 3.2,
+        insideCam: [-13.5, 1.8, 18.5], insideLook: [-15.5, 2.0, 21.0],
+        dollhouseCam: [-13.8, 8.0, 13.5], dollhouseLook: [-13.8, 1.5, 19.0],
+        color: 0xa855f7
+      },
+      'BK': {
+        name: 'Bookshop Hall',
+        desc: 'Bookshop Hall: 11.6m x 5.0m major room. Continuous bookshelves and glass counters.',
+        x: [-25.8, -14.2], z: [13.2, 18.2], fl: 0.0, h: 3.0,
+        insideCam: [-19.0, 1.5, 15.5], insideLook: [-24.0, 1.5, 16.0],
+        dollhouseCam: [-20.0, 12.0, 8.5], dollhouseLook: [-20.0, 1.5, 15.7],
+        color: 0x10b981
+      },
+      'LH': {
+        name: 'Lecture Hall Entrance',
+        desc: 'Lecture Hall Entry: 7.2m x 5.2m. Enclosed room with signed lecture hall door.',
+        x: [-32.6, -25.4], z: [13.0, 18.2], fl: 0.0, h: 2.8,
+        insideCam: [-28.5, 1.5, 16.0], insideLook: [-30.5, 1.5, 15.3],
+        dollhouseCam: [-29.0, 9.0, 9.5], dollhouseLook: [-29.0, 1.2, 15.6],
+        color: 0xf59e0b
+      }
+    };
+
+    function init() {
+      const container = document.getElementById('canvas-container');
+      
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x090d16);
+
+      camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 200);
+      
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.rotateSpeed = 0.7;
+      controls.zoomSpeed = 1.0;
+      controls.panSpeed = 0.8;
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0x38bdf8, 0.75);
+      dirLight.position.set(-10, 30, -10);
+      scene.add(dirLight);
+
+      // Architectural Ground Grid
+      const gridHelper = new THREE.GridHelper(80, 80, 0x38bdf8, 0x1e293b);
+      gridHelper.position.set(-15, -0.01, 10);
+      scene.add(gridHelper);
+
+      // Build Solid CAD Shell for all 9 rooms
+      buildArchitecturalShell();
+
+      // Load unified 509k venue point cloud in global coordinates
+      loadUnifiedVenueCloud();
+
+      window.addEventListener('resize', onWindowResize);
+      animate();
+    }
+
+    function buildArchitecturalShell() {
+      cadGroup = new THREE.Group();
+      
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: 0x1e293b,
+        roughness: 0.7,
+        metalness: 0.2,
+        transparent: true,
+        opacity: 0.65,
+        side: THREE.DoubleSide
+      });
+
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        roughness: 0.5,
+        metalness: 0.1
+      });
+
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 2 });
+
+      for (const [code, r] of Object.entries(architecturalRooms)) {
+        if (code === 'VENUE') continue;
+        const x1 = r.x[0], x2 = r.x[1];
+        const z1 = r.z[0], z2 = r.z[1];
+        const w = x2 - x1;
+        const l = z2 - z1;
+        const fl = r.fl;
+        const h = r.h;
+
+        // 1. Solid Floor Plane
+        const floorGeo = new THREE.PlaneGeometry(w, l);
+        const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.position.set((x1 + x2)/2, fl, (z1 + z2)/2);
+        cadGroup.add(floorMesh);
+
+        // Floor border outline
+        const floorEdges = new THREE.LineSegments(new THREE.EdgesGeometry(floorGeo), edgeMat);
+        floorEdges.rotation.x = -Math.PI / 2;
+        floorEdges.position.copy(floorMesh.position);
+        cadGroup.add(floorEdges);
+
+        // 2. Extruded Walls
+        const t = 0.18;
+        const walls = [
+          { w: w + 2*t, h: h, d: t, x: (x1+x2)/2, z: z1 - t/2 },
+          { w: w + 2*t, h: h, d: t, x: (x1+x2)/2, z: z2 + t/2 },
+          { w: t, h: h, d: l, x: x1 - t/2, z: (z1+z2)/2 },
+          { w: t, h: h, d: l, x: x2 + t/2, z: (z1+z2)/2 }
+        ];
+
+        for (const wall of walls) {
+          const wGeo = new THREE.BoxGeometry(wall.w, wall.h, wall.d);
+          const wMesh = new THREE.Mesh(wGeo, wallMat);
+          wMesh.position.set(wall.x, fl + h/2, wall.z);
+          cadGroup.add(wMesh);
+
+          const wEdges = new THREE.LineSegments(new THREE.EdgesGeometry(wGeo), new THREE.LineBasicMaterial({ color: 0x334155 }));
+          wEdges.position.copy(wMesh.position);
+          cadGroup.add(wEdges);
+        }
+
+        // Room Pillar marker
+        const pillarGeo = new THREE.CylinderGeometry(0.08, 0.08, h, 8);
+        const pillarMat = new THREE.MeshBasicMaterial({ color: r.color });
+        const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+        pillar.position.set(x1, fl + h/2, z1);
+        cadGroup.add(pillar);
+      }
+
+      scene.add(cadGroup);
+    }
+
+    function loadUnifiedVenueCloud() {
+      const plyPath = 'venue/venue_preview.ply';
+      const loader = new THREE.PLYLoader();
+      
+      loader.load(plyPath, function (geometry) {
+        const pSize = parseFloat(document.getElementById('size-slider').value);
+        pointMaterial = new THREE.PointsMaterial({
+          size: pSize,
+          vertexColors: true,
+          sizeAttenuation: true
+        });
+
+        const pos = geometry.attributes.position;
+        const nPoints = pos.count;
+        document.getElementById('stat-points').textContent = nPoints.toLocaleString();
+
+        originalColors = geometry.attributes.color.clone();
+
+        // Elevation color gradient
+        const minH = -0.5, maxH = 3.2;
+        const hCols = new Float32Array(nPoints * 3);
+        const colA = new THREE.Color(0x0284c7);
+        const colB = new THREE.Color(0x38bdf8);
+        const colC = new THREE.Color(0xf59e0b);
+        const colD = new THREE.Color(0xf43f5e);
+
+        for (let i = 0; i < nPoints; i++) {
+          const t = Math.max(0, Math.min(1, (pos.getY(i) - minH) / (maxH - minH)));
+          let c;
+          if (t < 0.33) c = colA.clone().lerp(colB, t / 0.33);
+          else if (t < 0.66) c = colB.clone().lerp(colC, (t - 0.33) / 0.33);
+          else c = colC.clone().lerp(colD, (t - 0.66) / 0.34);
+
+          hCols[i * 3] = c.r;
+          hCols[i * 3 + 1] = c.g;
+          hCols[i * 3 + 2] = c.b;
+        }
+        heightColors = new THREE.BufferAttribute(hCols, 3);
+
+        pointCloud = new THREE.Points(geometry, pointMaterial);
+        pointCloud.visible = showScan;
+        scene.add(pointCloud);
+
+        // Apply initial whole venue overview
+        teleportRoom('VENUE');
+
+        setTimeout(() => {
+          document.getElementById('loading-overlay').style.opacity = '0';
+          document.getElementById('loading-overlay').style.pointerEvents = 'none';
+        }, 120);
+
+      }, undefined, function (error) {
+        console.error("PLY load error:", error);
+        document.getElementById('loading-overlay').style.opacity = '0';
+        document.getElementById('loading-overlay').style.pointerEvents = 'none';
+      });
+    }
+
+    function teleportRoom(code) {
+      currentRoomCode = code;
+      const r = architecturalRooms[code];
+      
+      document.querySelectorAll('.room-bar .room-pill').forEach(b => {
+        if (code === 'VENUE' && b.textContent.includes('Entire Venue')) {
+          b.classList.add('active');
+        } else if (code !== 'VENUE' && b.textContent.includes(code)) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      document.getElementById('stat-view').textContent = r.name;
+      document.getElementById('view-desc').textContent = r.desc;
+
+      setViewMode(currentMode);
+    }
+
+    function setViewMode(mode) {
+      currentMode = mode;
+      const r = architecturalRooms[currentRoomCode];
+      document.querySelectorAll('#btn-inside, #btn-dollhouse').forEach(b => b.classList.remove('active'));
+
+      if (mode === 'inside') {
+        document.getElementById('btn-inside').classList.add('active');
+        const c = r.insideCam || r.cam;
+        const l = r.insideLook || r.look;
+        camera.position.set(...c);
+        controls.target.set(...l);
+      } else {
+        document.getElementById('btn-dollhouse').classList.add('active');
+        const c = r.dollhouseCam || r.cam;
+        const l = r.dollhouseLook || r.look;
+        camera.position.set(...c);
+        controls.target.set(...l);
+      }
+      controls.update();
+    }
+
+    function toggleCAD() {
+      showCAD = !showCAD;
+      if (cadGroup) cadGroup.visible = showCAD;
+      const btn = document.getElementById('btn-cad');
+      btn.textContent = `Clean CAD Walls: ${showCAD ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', showCAD);
+    }
+
+    function toggleScan() {
+      showScan = !showScan;
+      if (pointCloud) pointCloud.visible = showScan;
+      const btn = document.getElementById('btn-scan');
+      btn.textContent = `Scan Points: ${showScan ? 'ON' : 'OFF'}`;
+      btn.classList.toggle('active', showScan);
+    }
+
+    function setColorMode(mode) {
+      currentColorMode = mode;
+      document.querySelectorAll('#btn-rgb, #btn-height').forEach(b => b.classList.remove('active'));
+
+      if (mode === 'rgb') {
+        document.getElementById('btn-rgb').classList.add('active');
+        if (pointCloud && originalColors) {
+          pointCloud.geometry.setAttribute('color', originalColors);
+          pointCloud.geometry.attributes.color.needsUpdate = true;
+        }
+      } else {
+        document.getElementById('btn-height').classList.add('active');
+        if (pointCloud && heightColors) {
+          pointCloud.geometry.setAttribute('color', heightColors);
+          pointCloud.geometry.attributes.color.needsUpdate = true;
+        }
+      }
+    }
+
+    function updatePointSize(val) {
+      document.getElementById('size-val').textContent = val;
+      if (pointMaterial) {
+        pointMaterial.size = parseFloat(val);
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

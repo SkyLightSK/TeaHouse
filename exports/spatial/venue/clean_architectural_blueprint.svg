@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1908 1323" width="100%" height="100%" style="background: #090d16;">
+  <defs>
+    <style>
+      .room-box { fill: rgba(30, 41, 59, 0.6); stroke: #38bdf8; stroke-width: 2.5; }
+      .room-outer { fill: none; stroke: #64748b; stroke-width: 1.2; stroke-dasharray: 4,4; }
+      .door-cut { stroke: #10b981; stroke-width: 4.5; stroke-linecap: round; }
+      .door-swing { fill: none; stroke: rgba(16, 185, 129, 0.5); stroke-width: 1.2; stroke-dasharray: 3,3; }
+      .grid-line { stroke: rgba(51, 65, 85, 0.4); stroke-width: 0.8; stroke-dasharray: 2,4; }
+      .room-title { fill: #ffffff; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 15px; font-weight: 700; text-anchor: middle; }
+      .room-dim { fill: #38bdf8; font-family: ui-monospace, monospace; font-size: 12px; font-weight: 600; text-anchor: middle; }
+      .room-elev { fill: #94a3b8; font-family: ui-monospace, monospace; font-size: 11px; text-anchor: middle; }
+      .stair-step { stroke: #f59e0b; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <line x1="-17.999999999999936" y1="0" x2="-17.999999999999936" y2="1323" class="grid-line" />
+  <line x1="27.000000000000064" y1="0" x2="27.000000000000064" y2="1323" class="grid-line" />
+  <line x1="72.00000000000006" y1="0" x2="72.00000000000006" y2="1323" class="grid-line" />
+  <line x1="117.00000000000006" y1="0" x2="117.00000000000006" y2="1323" class="grid-line" />
+  <line x1="162.00000000000006" y1="0" x2="162.00000000000006" y2="1323" class="grid-line" />
+  <line x1="207.00000000000006" y1="0" x2="207.00000000000006" y2="1323" class="grid-line" />
+  <line x1="252.00000000000006" y1="0" x2="252.00000000000006" y2="1323" class="grid-line" />
+  <line x1="297.00000000000006" y1="0" x2="297.00000000000006" y2="1323" class="grid-line" />
+  <line x1="342.00000000000006" y1="0" x2="342.00000000000006" y2="1323" class="grid-line" />
+  <line x1="387.00000000000006" y1="0" x2="387.00000000000006" y2="1323" class="grid-line" />
+  <line x1="432.00000000000006" y1="0" x2="432.00000000000006" y2="1323" class="grid-line" />
+  <line x1="477.00000000000006" y1="0" x2="477.00000000000006" y2="1323" class="grid-line" />
+  <line x1="522.0000000000001" y1="0" x2="522.0000000000001" y2="1323" class="grid-line" />
+  <line x1="567.0000000000001" y1="0" x2="567.0000000000001" y2="1323" class="grid-line" />
+  <line x1="612.0000000000001" y1="0" x2="612.0000000000001" y2="1323" class="grid-line" />
+  <line x1="657.0000000000001" y1="0" x2="657.0000000000001" y2="1323" class="grid-line" />
+  <line x1="702.0000000000001" y1="0" x2="702.0000000000001" y2="1323" class="grid-line" />
+  <line x1="747.0000000000001" y1="0" x2="747.0000000000001" y2="1323" class="grid-line" />
+  <line x1="792.0000000000001" y1="0" x2="792.0000000000001" y2="1323" class="grid-line" />
+  <line x1="837.0000000000001" y1="0" x2="837.0000000000001" y2="1323" class="grid-line" />
+  <line x1="882.0000000000001" y1="0" x2="882.0000000000001" y2="1323" class="grid-line" />
+  <line x1="927.0000000000001" y1="0" x2="927.0000000000001" y2="1323" class="grid-line" />
+  <line x1="972.0000000000001" y1="0" x2="972.0000000000001" y2="1323" class="grid-line" />
+  <line x1="1017.0000000000001" y1="0" x2="1017.0000000000001" y2="1323" class="grid-line" />
+  <line x1="1062.0" y1="0" x2="1062.0" y2="1323" class="grid-line" />
+  <line x1="1107.0" y1="0" x2="1107.0" y2="1323" class="grid-line" />
+  <line x1="1152.0" y1="0" x2="1152.0" y2="1323" class="grid-line" />
+  <line x1="1197.0" y1="0" x2="1197.0" y2="1323" class="grid-line" />
+  <line x1="1242.0" y1="0" x2="1242.0" y2="1323" class="grid-line" />
+  <line x1="1287.0" y1="0" x2="1287.0" y2="1323" class="grid-line" />
+  <line x1="1332.0" y1="0" x2="1332.0" y2="1323" class="grid-line" />
+  <line x1="1377.0" y1="0" x2="1377.0" y2="1323" class="grid-line" />
+  <line x1="1422.0" y1="0" x2="1422.0" y2="1323" class="grid-line" />
+  <line x1="1467.0" y1="0" x2="1467.0" y2="1323" class="grid-line" />
+  <line x1="1512.0" y1="0" x2="1512.0" y2="1323" class="grid-line" />
+  <line x1="1557.0" y1="0" x2="1557.0" y2="1323" class="grid-line" />
+  <line x1="1602.0" y1="0" x2="1602.0" y2="1323" class="grid-line" />
+  <line x1="1647.0" y1="0" x2="1647.0" y2="1323" class="grid-line" />
+  <line x1="1692.0" y1="0" x2="1692.0" y2="1323" class="grid-line" />
+  <line x1="1737.0" y1="0" x2="1737.0" y2="1323" class="grid-line" />
+  <line x1="1782.0" y1="0" x2="1782.0" y2="1323" class="grid-line" />
+  <line x1="1827.0" y1="0" x2="1827.0" y2="1323" class="grid-line" />
+  <line x1="1872.0" y1="0" x2="1872.0" y2="1323" class="grid-line" />
+  <line x1="1917.0" y1="0" x2="1917.0" y2="1323" class="grid-line" />
+  <line x1="0" y1="1332.0" x2="1908" y2="1332.0" class="grid-line" />
+  <line x1="0" y1="1287.0" x2="1908" y2="1287.0" class="grid-line" />
+  <line x1="0" y1="1242.0" x2="1908" y2="1242.0" class="grid-line" />
+  <line x1="0" y1="1197.0" x2="1908" y2="1197.0" class="grid-line" />
+  <line x1="0" y1="1152.0" x2="1908" y2="1152.0" class="grid-line" />
+  <line x1="0" y1="1107.0" x2="1908" y2="1107.0" class="grid-line" />
+  <line x1="0" y1="1062.0" x2="1908" y2="1062.0" class="grid-line" />
+  <line x1="0" y1="1017.0000000000001" x2="1908" y2="1017.0000000000001" class="grid-line" />
+  <line x1="0" y1="972.0000000000001" x2="1908" y2="972.0000000000001" class="grid-line" />
+  <line x1="0" y1="927.0000000000001" x2="1908" y2="927.0000000000001" class="grid-line" />
+  <line x1="0" y1="882.0000000000001" x2="1908" y2="882.0000000000001" class="grid-line" />
+  <line x1="0" y1="837.0000000000001" x2="1908" y2="837.0000000000001" class="grid-line" />
+  <line x1="0" y1="792.0000000000001" x2="1908" y2="792.0000000000001" class="grid-line" />
+  <line x1="0" y1="747.0000000000001" x2="1908" y2="747.0000000000001" class="grid-line" />
+  <line x1="0" y1="702.0000000000001" x2="1908" y2="702.0000000000001" class="grid-line" />
+  <line x1="0" y1="657.0000000000001" x2="1908" y2="657.0000000000001" class="grid-line" />
+  <line x1="0" y1="612.0000000000001" x2="1908" y2="612.0000000000001" class="grid-line" />
+  <line x1="0" y1="567.0000000000001" x2="1908" y2="567.0000000000001" class="grid-line" />
+  <line x1="0" y1="522.0000000000001" x2="1908" y2="522.0000000000001" class="grid-line" />
+  <line x1="0" y1="477.00000000000006" x2="1908" y2="477.00000000000006" class="grid-line" />
+  <line x1="0" y1="432.00000000000006" x2="1908" y2="432.00000000000006" class="grid-line" />
+  <line x1="0" y1="387.00000000000006" x2="1908" y2="387.00000000000006" class="grid-line" />
+  <line x1="0" y1="342.00000000000006" x2="1908" y2="342.00000000000006" class="grid-line" />
+  <line x1="0" y1="297.00000000000006" x2="1908" y2="297.00000000000006" class="grid-line" />
+  <line x1="0" y1="252.00000000000006" x2="1908" y2="252.00000000000006" class="grid-line" />
+  <line x1="0" y1="207.00000000000006" x2="1908" y2="207.00000000000006" class="grid-line" />
+  <line x1="0" y1="162.00000000000006" x2="1908" y2="162.00000000000006" class="grid-line" />
+  <line x1="0" y1="117.00000000000006" x2="1908" y2="117.00000000000006" class="grid-line" />
+  <line x1="0" y1="72.00000000000006" x2="1908" y2="72.00000000000006" class="grid-line" />
+  <line x1="0" y1="27.000000000000064" x2="1908" y2="27.000000000000064" class="grid-line" />
+  <line x1="0" y1="-17.999999999999936" x2="1908" y2="-17.999999999999936" class="grid-line" />
+  <rect x="1494.0" y="864.0" width="288.0" height="333.0" class="room-outer" />
+  <rect x="1503.0" y="873.0" width="270.0" height="315.0" class="room-box" rx="2" />
+  <text x="1638.0" y="1018.5" class="room-title">TR &mdash; Tearoom</text>
+  <text x="1638.0" y="1036.5" class="room-dim">6.00m &times; 7.00m &bull; 42.0 m&sup2;</text>
+  <text x="1638.0" y="1052.5" class="room-elev">FL: +0.00m</text>
+  <rect x="1332.0" y="837.0" width="198.0" height="288.0" class="room-outer" />
+  <rect x="1341.0" y="846.0" width="180.0" height="270.0" class="room-box" rx="2" />
+  <text x="1431.0" y="969.0" class="room-title">TB &mdash; Tea Bar</text>
+  <text x="1431.0" y="987.0" class="room-dim">4.00m &times; 6.00m &bull; 24.0 m&sup2;</text>
+  <text x="1431.0" y="1003.0" class="room-elev">FL: +0.00m</text>
+  <rect x="1395.0" y="702.0" width="162.0" height="162.0" class="room-outer" />
+  <rect x="1404.0" y="711.0" width="144.0" height="144.0" class="room-box" rx="2" />
+  <text x="1476.0" y="771.0" class="room-title">PV &mdash; Pre-Bar Vestibule</text>
+  <text x="1476.0" y="789.0" class="room-dim">3.20m &times; 3.20m &bull; 10.2 m&sup2;</text>
+  <text x="1476.0" y="805.0" class="room-elev">FL: +0.00m</text>
+  <rect x="1422.0" y="324.0" width="315.0" height="414.0" class="room-outer" />
+  <rect x="1431.0" y="333.0" width="297.0" height="396.0" class="room-box" rx="2" />
+  <text x="1579.5" y="519.0" class="room-title">AS &mdash; Accessories Shop</text>
+  <text x="1579.5" y="537.0" class="room-dim">6.60m &times; 8.80m &bull; 58.1 m&sup2;</text>
+  <text x="1579.5" y="553.0" class="room-elev">FL: +0.15m</text>
+  <rect x="1165.5" y="243.0" width="292.5" height="144.0" class="room-outer" />
+  <rect x="1174.5" y="252.0" width="274.5" height="126.0" class="room-box" rx="2" />
+  <text x="1311.8" y="303.0" class="room-title">LC &mdash; Lower Corridor</text>
+  <text x="1311.8" y="321.0" class="room-dim">6.10m &times; 2.80m &bull; 17.1 m&sup2;</text>
+  <text x="1311.8" y="337.0" class="room-elev">FL: -0.30m</text>
+  <rect x="927.0" y="252.0" width="279.0" height="189.0" class="room-outer" />
+  <rect x="936.0" y="261.0" width="261.0" height="171.0" class="room-box" rx="2" />
+  <text x="1066.5" y="334.5" class="room-title">LB &mdash; Entrance Lobby</text>
+  <text x="1066.5" y="352.5" class="room-dim">5.80m &times; 3.80m &bull; 22.0 m&sup2;</text>
+  <text x="1066.5" y="368.5" class="room-elev">FL: +0.00m</text>
+  <rect x="864.0" y="126.0" width="229.5" height="162.0" class="room-outer" />
+  <rect x="873.0" y="135.0" width="211.5" height="144.0" class="room-box" rx="2" />
+  <text x="978.8" y="195.0" class="room-title">ST &mdash; Stair Passage</text>
+  <text x="978.8" y="213.0" class="room-dim">4.70m &times; 3.20m &bull; 15.0 m&sup2;</text>
+  <text x="978.8" y="229.0" class="room-elev">FL: +0.50m</text>
+  <rect x="432.0" y="234.0" width="540.0" height="243.0" class="room-outer" />
+  <rect x="441.0" y="243.0" width="522.0" height="225.0" class="room-box" rx="2" />
+  <text x="702.0" y="343.5" class="room-title">BK &mdash; Bookshop Hall</text>
+  <text x="702.0" y="361.5" class="room-dim">11.60m &times; 5.00m &bull; 58.0 m&sup2;</text>
+  <text x="702.0" y="377.5" class="room-elev">FL: +0.00m</text>
+  <rect x="126.0" y="234.0" width="342.0" height="252.0" class="room-outer" />
+  <rect x="135.0" y="243.0" width="324.0" height="234.0" class="room-box" rx="2" />
+  <text x="297.0" y="348.0" class="room-title">LH &mdash; Lecture Hall Entrance</text>
+  <text x="297.0" y="366.0" class="room-dim">7.20m &times; 5.20m &bull; 37.4 m&sup2;</text>
+  <text x="297.0" y="382.0" class="room-elev">FL: +0.00m</text>
+  <!-- D1 (Tearoom/Bar) -->
+  <line x1="1512.0" y1="1035.0" x2="1512.0" y2="981.0" class="door-cut" />
+  <!-- D2 (Bar/Vestibule) -->
+  <line x1="1476.0" y1="850.5" x2="1521.0" y2="850.5" class="door-cut" />
+  <!-- D3 (Vestibule/Shop) -->
+  <line x1="1494.0" y1="720.0" x2="1539.0" y2="720.0" class="door-cut" />
+  <!-- D4 (Shop/Corridor - 3 Steps) -->
+  <line x1="1440.0" y1="360.0" x2="1440.0" y2="306.0" class="door-cut" />
+  <circle cx="1440.0" cy="342.0" r="3" fill="#f59e0b" />
+  <circle cx="1440.0" cy="324.0" r="3" fill="#f59e0b" />
+  <!-- D5 (Corridor/Lobby - 2 Steps) -->
+  <line x1="1188.0" y1="351.0" x2="1188.0" y2="297.0" class="door-cut" />
+  <circle cx="1188.0" cy="324.0" r="3" fill="#f59e0b" />
+  <!-- D6 (Lobby/Bookshop) -->
+  <line x1="949.5" y1="396.0" x2="949.5" y2="333.0" class="door-cut" />
+  <!-- D7 (Bookshop/Lecture Entry) -->
+  <line x1="450.0" y1="396.0" x2="450.0" y2="333.0" class="door-cut" />
+  <!-- D8 (Lobby/Street Stairs) -->
+  <line x1="990.0" y1="270.0" x2="1044.0" y2="270.0" class="door-cut" />
+  <circle cx="999.0" cy="270.0" r="3" fill="#f59e0b" />
+  <circle cx="1008.0" cy="270.0" r="3" fill="#f59e0b" />
+  <circle cx="1017.0" cy="270.0" r="3" fill="#f59e0b" />
+  <circle cx="1026.0" cy="270.0" r="3" fill="#f59e0b" />
+  <circle cx="1035.0" cy="270.0" r="3" fill="#f59e0b" />
+  <!-- D9 (Exterior Street Portal) -->
+  <line x1="891.0" y1="135.0" x2="945.0" y2="135.0" class="door-cut" />
+  <!-- Title block -->
+  <g transform="translate(40, 50)">
+    <text x="0" y="0" fill="#ffffff" font-family="ui-sans-serif" font-size="20" font-weight="800">TEAHOUSE ARCHITECTURAL BLUEPRINT</text>
+    <text x="0" y="20" fill="#94a3b8" font-family="ui-monospace" font-size="12">Measured from 23 Optical Reference Panoramas &bull; Metric Scale: 1:20 &bull; Orthogonal Manhattan Fitter</text>
+  </g>
+  <g transform="translate(1838, 70)">
+    <circle r="32" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+    <polygon points="0,-24 8,-4 0,-12 -8,-4" fill="#f43f5e" />
+    <polygon points="0,24 8,4 0,12 -8,4" fill="#64748b" />
+    <text x="-5" y="-6" fill="#f43f5e" font-size="12" font-weight="bold" font-family="monospace">N</text>
+  </g>
+</svg>
