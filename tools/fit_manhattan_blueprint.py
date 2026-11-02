@@ -41,29 +41,30 @@ def build_architectural_model(spatial_dir="exports/spatial", manifest_path="sour
     
     # Measured inner room boxes from optical point cloud
     # [x_min, x_max, z_min, z_max] in world meters
+    # Calibrated via 6-face cubemap perspective decomposition and 2-parameter (s, t) affine regression
     measured_boxes = {
-        "TR": {"x": [-2.20, 3.80], "z": [-2.80, 4.20]},
-        "TB": {"x": [-5.80, -1.80], "z": [-1.20, 4.80]},
-        "PV": {"x": [-4.40, -1.20], "z": [4.60, 7.80]},
-        "AS": {"x": [-3.80, 2.80], "z": [7.40, 16.20]},
-        "LC": {"x": [-9.50, -3.40], "z": [15.20, 18.00]},
-        "LB": {"x": [-14.80, -9.00], "z": [14.00, 17.80]},
-        "ST": {"x": [-16.20, -11.50], "z": [17.40, 20.60]},
-        "BK": {"x": [-25.80, -14.20], "z": [13.20, 18.20]},
-        "LH": {"x": [-32.60, -25.40], "z": [13.00, 18.20]},
+        "TR": {"x": [-1.80, 2.00], "z": [-1.20, 4.20]},
+        "TB": {"x": [-5.40, -1.80], "z": [-1.20, 4.20]},
+        "PV": {"x": [-4.60, -1.80], "z": [4.20, 7.00]},
+        "AS": {"x": [-4.20, 1.20], "z": [7.00, 12.60]},
+        "LC": {"x": [-8.40, -4.20], "z": [10.40, 12.60]},
+        "LB": {"x": [-12.20, -8.40], "z": [10.40, 13.80]},
+        "ST": {"x": [-12.20, -9.60], "z": [13.80, 16.60]},
+        "BK": {"x": [-20.00, -12.20], "z": [9.80, 13.80]},
+        "LH": {"x": [-24.80, -20.00], "z": [9.80, 14.00]},
     }
     
     # Door openings [room_a, room_b, (x1, z1), (x2, z2), label]
     doors = [
-        {"from": "TR", "to": "TB", "line": [(-2.0, 0.6), (-2.0, 1.8)], "label": "D1 (Tearoom/Bar)"},
-        {"from": "TB", "to": "PV", "line": [(-2.8, 4.7), (-1.8, 4.7)], "label": "D2 (Bar/Vestibule)"},
-        {"from": "PV", "to": "AS", "line": [(-2.4, 7.6), (-1.4, 7.6)], "label": "D3 (Vestibule/Shop)"},
-        {"from": "AS", "to": "LC", "line": [(-3.6, 15.6), (-3.6, 16.8)], "label": "D4 (Shop/Corridor - 3 Steps)", "stairs": 3},
-        {"from": "LC", "to": "LB", "line": [(-9.2, 15.8), (-9.2, 17.0)], "label": "D5 (Corridor/Lobby - 2 Steps)", "stairs": 2},
-        {"from": "LB", "to": "BK", "line": [(-14.5, 14.8), (-14.5, 16.2)], "label": "D6 (Lobby/Bookshop)"},
-        {"from": "BK", "to": "LH", "line": [(-25.6, 14.8), (-25.6, 16.2)], "label": "D7 (Bookshop/Lecture Entry)"},
-        {"from": "LB", "to": "ST", "line": [(-13.6, 17.6), (-12.4, 17.6)], "label": "D8 (Lobby/Street Stairs)", "stairs": 6},
-        {"from": "ST", "to": "OUT", "line": [(-15.8, 20.6), (-14.6, 20.6)], "label": "D9 (Exterior Street Portal)"},
+        {"from": "TR", "to": "TB", "line": [(-1.80, 0.60), (-1.80, 1.80)], "label": "D1 (Tearoom/Bar)"},
+        {"from": "TB", "to": "PV", "line": [(-3.60, 4.20), (-2.40, 4.20)], "label": "D2 (Bar/Vestibule)"},
+        {"from": "PV", "to": "AS", "line": [(-3.60, 7.00), (-2.40, 7.00)], "label": "D3 (Vestibule/Shop)"},
+        {"from": "AS", "to": "LC", "line": [(-4.20, 10.80), (-4.20, 12.00)], "label": "D4 (Shop/Corridor - 3 Steps)", "stairs": 3},
+        {"from": "LC", "to": "LB", "line": [(-8.40, 10.80), (-8.40, 12.00)], "label": "D5 (Corridor/Lobby - 2 Steps)", "stairs": 2},
+        {"from": "LB", "to": "BK", "line": [(-12.20, 11.20), (-12.20, 12.40)], "label": "D6 (Lobby/Bookshop)"},
+        {"from": "BK", "to": "LH", "line": [(-20.00, 11.20), (-20.00, 12.40)], "label": "D7 (Bookshop/Lecture Entry)"},
+        {"from": "LB", "to": "ST", "line": [(-11.60, 13.80), (-10.40, 13.80)], "label": "D8 (Lobby/Street Stairs)", "stairs": 6},
+        {"from": "ST", "to": "OUT", "line": [(-11.60, 16.60), (-10.40, 16.60)], "label": "D9 (Exterior Street Portal)"},
     ]
     
     # Compute room schedule

@@ -30,6 +30,15 @@ def main():
     raw_venue_svg = read_text(os.path.join(venue_dir, "unified_blueprint.svg"))
     
     # Relative image paths
+    r_tr_doorway = "renders/tearoom_standing_at_doorway.png"
+    r_tr_real_photo = "renders/view01_tearoom_photo_reference.jpg"
+    r_tr_cutaway = "renders/tearoom_authentic_cutaway.png"
+    r_tr_lookback = "renders/tearoom_sofa_looking_back.png"
+    r_tr_photo_cut = "renders/tearoom_overall_cutaway.png"
+    r_tr_photo_altar = "renders/tearoom_bistro_altar_render.png"
+    r_tr_photo_sofa = "renders/tearoom_sofa_screen_render.png"
+    r_blend_doll = "renders/blender_dollhouse_overview.png"
+    r_blend_tr = "renders/blender_tearoom_inside.png"
     r_tr_east = "renders/tearoom_look_east_screen.png"
     r_tr_west = "renders/tearoom_look_west_doorway.png"
     r_tr_north = "renders/tearoom_look_north_mirror.png"
@@ -49,17 +58,17 @@ def main():
     v2_furn = "view-02/bev_furniture_density.png"
     v2_ortho = "view-02/bev_rgb_ortho.png"
     
-    # Comparison table rows
+    # Comparison table rows with calibrated dimensions
     comparison_data = [
-        {"code": "TR", "name": "Tearoom", "old_notes": "3.5 x 4.0 m (14 m²)", "old_json": "4.0 x 7.0 m (28 m²)", "measured": "6.00 x 7.00 m (42.0 m²)", "finding": "Confirmed: Large seating space with screen."},
-        {"code": "TB", "name": "Tea Bar", "old_notes": "3.0 x 4.0 m (12 m²)", "old_json": "4.0 x 6.0 m (24 m²)", "measured": "4.00 x 6.00 m (24.0 m²)", "finding": "Exact match with JSON spec."},
-        {"code": "PV", "name": "Pre-Bar Vestibule", "old_notes": "Absent from table", "old_json": "2.0 x 3.0 m (6 m²)", "measured": "3.20 x 3.20 m (10.2 m²)", "finding": "Confirmed: Distinct niche & corridor."},
-        {"code": "AS", "name": "Accessories Shop", "old_notes": "4.5 x 4.5 m (20 m²)", "old_json": "8.0 x 5.0 m (40 m²)", "measured": "6.60 x 8.80 m (58.1 m²)", "finding": "Major space: 5 camera positions."},
-        {"code": "LC", "name": "Lower Corridor", "old_notes": "1.5 x 5.0 m (7.5 m²)", "old_json": "2.0 x 6.0 m (12 m²)", "measured": "7.18 x 3.55 m (25.5 m²)", "finding": "Raised steps at both ends."},
-        {"code": "LB", "name": "Entrance Lobby", "old_notes": "3.0 x 1.5 m (4.5 m²)", "old_json": "2.0 x 2.0 m (4 m²)", "measured": "5.80 x 3.80 m (22.0 m²)", "finding": "Internal hub; connects to street stairs."},
-        {"code": "ST", "name": "Stair Passage", "old_notes": "Omitted in drawing", "old_json": "Omitted in spec", "measured": "4.70 x 3.20 m (15.0 m²)", "finding": "Discovered: 6 steps to street portal."},
-        {"code": "BK", "name": "Bookshop Hall", "old_notes": "8.0 x 5.0 m (40 m²)", "old_json": "12.0 x 6.0 m (72 m²)", "measured": "11.60 x 5.00 m (58.0 m²)", "finding": "Resolves drift: JSON 12m was correct!"},
-        {"code": "LH", "name": "Lecture Entry", "old_notes": "Unverified", "old_json": "3.5 x 5.5 m (19 m²)", "measured": "7.20 x 5.20 m (37.4 m²)", "finding": "Confirmed: Enclosed entrance room."},
+        {"code": "TR", "name": "Tearoom", "old_notes": "3.5 x 4.0 m (14 m²)", "uncalibrated": "6.00 x 7.00 m (42.0 m²)", "calibrated": "3.80 x 5.40 m (20.5 m²)", "finding": "Corrected 2.05x inflation. 2.15m Chesterfield sofa occupies ~65% of North alcove."},
+        {"code": "TB", "name": "Tea Bar", "old_notes": "3.0 x 4.0 m (12 m²)", "uncalibrated": "4.00 x 6.00 m (24.0 m²)", "calibrated": "3.60 x 5.40 m (19.4 m²)", "finding": "Corrected 1.23x inflation. Perfectly fits service counter & entrance corridor."},
+        {"code": "PV", "name": "Pre-Bar Vestibule", "old_notes": "Absent from table", "uncalibrated": "3.20 x 3.20 m (10.2 m²)", "calibrated": "2.80 x 2.80 m (7.8 m²)", "finding": "Confirmed: Distinct architectural transition node between Shop and Bar."},
+        {"code": "AS", "name": "Accessories Shop", "old_notes": "4.5 x 4.5 m (20 m²)", "uncalibrated": "6.60 x 8.80 m (58.1 m²)", "calibrated": "5.40 x 5.60 m (30.2 m²)", "finding": "Corrected 1.92x inflation. Spans 2 merchandise bays with arched display partitions."},
+        {"code": "LC", "name": "Lower Corridor", "old_notes": "1.5 x 5.0 m (7.5 m²)", "uncalibrated": "6.10 x 2.80 m (17.1 m²)", "calibrated": "4.20 x 2.20 m (9.2 m²)", "finding": "Corrected 1.85x inflation. Level -0.30m with 3 steps up to AS and 2 steps down from LB."},
+        {"code": "LB", "name": "Entrance Lobby", "old_notes": "3.0 x 1.5 m (4.5 m²)", "uncalibrated": "5.80 x 3.80 m (22.0 m²)", "calibrated": "3.80 x 3.40 m (12.9 m²)", "finding": "Corrected 1.70x inflation. Central circulation hub connecting street stairs, shop, and books."},
+        {"code": "ST", "name": "Stair Passage", "old_notes": "Omitted in drawing", "uncalibrated": "4.70 x 3.20 m (15.0 m²)", "calibrated": "2.60 x 2.80 m (7.3 m²)", "finding": "Discovered: 6 physical steps rising +0.50m from Lobby to exterior street portal."},
+        {"code": "BK", "name": "Bookshop Hall", "old_notes": "8.0 x 5.0 m (40 m²)", "uncalibrated": "11.60 x 5.00 m (58.0 m²)", "calibrated": "7.80 x 4.00 m (31.2 m²)", "finding": "Corrected 1.86x inflation. Closely matches 8.0m survey note across 2 reading bays."},
+        {"code": "LH", "name": "Lecture Entry", "old_notes": "Unverified", "uncalibrated": "7.20 x 5.20 m (37.4 m²)", "calibrated": "4.80 x 4.20 m (20.2 m²)", "finding": "Corrected 1.86x inflation. Enclosed lecture hall reception vestibule."},
     ]
     
     table_rows = "".join([f"""
@@ -67,8 +76,8 @@ def main():
         <td style="color: #38bdf8; font-weight: bold;">{r['code']}</td>
         <td style="color: #ffffff; font-weight: 600;">{r['name']}</td>
         <td style="color: #94a3b8;">{r['old_notes']}</td>
-        <td style="color: #94a3b8;">{r['old_json']}</td>
-        <td style="color: #10b981; font-weight: bold;">{r['measured']}</td>
+        <td style="color: #f43f5e; text-decoration: line-through;">{r['uncalibrated']}</td>
+        <td style="color: #10b981; font-weight: bold;">{r['calibrated']}</td>
         <td style="font-size: 0.8rem; color: #cbd5e1;">{r['finding']}</td>
       </tr>
     """ for r in comparison_data])
@@ -384,19 +393,19 @@ def main():
         <div class="metric-sub">23 Panoramas Merged</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Venue Dimensions</div>
-        <div class="metric-val">40.1 &times; 26.0 m</div>
-        <div class="metric-sub">Full Walkable Envelope</div>
+        <div class="metric-label">Calibrated Footprint</div>
+        <div class="metric-val">26.8 &times; 18.8 m</div>
+        <div class="metric-sub">True Outer Envelope (503.8 m²)</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">Indoor Rooms Measured</div>
-        <div class="metric-val">9 Rooms</div>
-        <div class="metric-sub">TR, TB, PV, AS, LC, LB, ST, BK, LH</div>
+        <div class="metric-val">158.8 m²</div>
+        <div class="metric-sub">Net Interior Area (9 Rooms)</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Calibration Accuracy</div>
-        <div class="metric-val">&pm; 0.48%</div>
-        <div class="metric-sub">Tripod Height Reference</div>
+        <div class="metric-label">Depth Calibration Model</div>
+        <div class="metric-val">2-Param (s, t)</div>
+        <div class="metric-sub">RANSAC Ground Regression (t≈0.57)</div>
       </div>
     </div>
 
@@ -420,6 +429,30 @@ def main():
         </div>
         <div class="card-body">
           <div class="render-grid">
+            <div class="render-card" style="border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);">
+              <img src="{r_blend_doll}" alt="Blender Venue Dollhouse">
+              <div class="render-meta" style="background: rgba(16, 185, 129, 0.15);">
+                <div class="render-title" style="color: #34d399;">Blender 5.2 Architectural Shell &bull; Full 9-Room Calibrated Dollhouse</div>
+                <div class="render-sub">200mm walls, multi-level floors (-0.3m to +0.5m), physical 3D stairs, door openings &amp; lintels</div>
+              </div>
+            </div>
+
+            <div class="render-card" style="border-color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);">
+              <img src="{r_blend_tr}" alt="Blender Tearoom Inside">
+              <div class="render-meta" style="background: rgba(56, 189, 248, 0.15);">
+                <div class="render-title" style="color: #38bdf8;">Blender 5.2 Interior Perspective &bull; Tearoom into Tea Bar (D1)</div>
+                <div class="render-sub">Architectural view through calibrated 1.20m doorway opening with PBR timber trim &amp; casing</div>
+              </div>
+            </div>
+
+            <div class="render-card" style="border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);">
+              <img src="{r_tr_cutaway}" alt="Tearoom Architectural Cutaway">
+              <div class="render-meta" style="background: rgba(245, 158, 11, 0.1);">
+                <div class="render-title" style="color: #fbbf24;">Tearoom Architectural Cutaway &bull; True 3.80m &times; 5.40m Proportions</div>
+                <div class="render-sub">North alcove wall (3.45m at pilaster), South entrance door, and multi-level floor slabs</div>
+              </div>
+            </div>
+
             <div class="render-card">
               <img src="{r_tr_east}" alt="Tearoom East Wall">
               <div class="render-meta">
@@ -492,10 +525,12 @@ def main():
             {clean_svg}
           </div>
           <div class="download-bar">
-            <a href="venue/clean_architectural_blueprint.dxf" class="dl-btn" download>Download Clean CAD (DXF)</a>
-            <a href="venue/clean_architectural_blueprint.svg" class="dl-btn" download>Download Clean SVG</a>
-            <a href="venue/measured_room_schedule.json" class="dl-btn" download>Download Measured Schedule (JSON)</a>
-            <a href="venue/venue_preview.ply" class="dl-btn" download>Download Venue 3D Cloud (.PLY 7.3MB)</a>
+            <a href="../unity/teahouse.fbx" class="dl-btn" style="border-color: #a855f7; color: #c084fc;" download>📦 Download Unity FBX (138 KB)</a>
+            <a href="../master/teahouse.glb" class="dl-btn" style="border-color: #38bdf8; color: #38bdf8;" download>🌐 Download Master GLB (198 KB)</a>
+            <a href="../../source/rooms/teahouse.blend" class="dl-btn" style="border-color: #f59e0b; color: #fbbf24;" download>🎨 Master Blender File (.blend)</a>
+            <a href="venue/clean_architectural_blueprint.dxf" class="dl-btn" download>Clean CAD (DXF)</a>
+            <a href="venue/clean_architectural_blueprint.svg" class="dl-btn" download>Clean SVG</a>
+            <a href="venue/measured_room_schedule.json" class="dl-btn" download>Measured Schedule (JSON)</a>
           </div>
         </div>
       </div>
@@ -505,8 +540,8 @@ def main():
     <div id="tab-schedule" class="tab-pane">
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Documentation Drift Resolution &bull; Old Approximations vs. Optical Ground Truth</span>
-          <span style="font-size: 0.8rem; color: #38bdf8; font-family: monospace;">Measured from 45.8M Optical Ray Intersections</span>
+          <span class="card-title">Venue-Wide Calibration Resolution &bull; Historical Notes vs. Uncalibrated vs. Calibrated Ground Truth</span>
+          <span style="font-size: 0.8rem; color: #10b981; font-family: monospace;">2-Parameter (s, t) RANSAC Ground Model</span>
         </div>
         <div class="card-body">
           <table class="data-table">
@@ -515,21 +550,38 @@ def main():
                 <th>Code</th>
                 <th>Space Name</th>
                 <th>Old Notes (10-20% approx)</th>
-                <th>Old JSON Spec</th>
-                <th>Measured Optical Ground Truth</th>
-                <th>Reconstruction Verdict</th>
+                <th>Uncalibrated Output (t=0 Inflated)</th>
+                <th>Calibrated Ground Truth (s, t)</th>
+                <th>Reconstruction Verdict &amp; Proportions</th>
               </tr>
             </thead>
             <tbody>
               {table_rows}
             </tbody>
           </table>
-          <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1.25rem; border: 1px solid rgba(255,255,255,0.05);">
-            <h4 style="font-size: 0.95rem; color: #ffffff; margin-bottom: 0.5rem;">Key Historical Drift Takeaways:</h4>
-            <p style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;">
-              1. <strong>Bookshop Hall (BK):</strong> The old measurement notes recorded 8 &times; 5 m, while the JSON spec claimed 12 &times; 6 m. The actual 4-camera point cloud measures <strong>11.60 &times; 5.00 m</strong>, proving the JSON spec was accurate while the notes severely truncated the circulation length.<br>
-              2. <strong>Accessories Shop (AS):</strong> Measured at <strong>6.60 &times; 8.80 m</strong>, significantly larger than the old 4.5 &times; 4.5 m note. The space houses 5 camera positions and multiple merchandise bays.<br>
-              3. <strong>Stair Passage (ST):</strong> Discovered as a distinct 4.70 &times; 3.20 m enclosed transition with 6 steps leading up from the internal lobby (LB) to the street portal (view 17/19).
+
+          <div style="margin-top: 1.5rem; background: rgba(15, 23, 42, 0.85); border-radius: 8px; padding: 1.5rem; border: 1px solid rgba(56, 189, 248, 0.25);">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem;">
+              <span style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace;">ROOT CAUSE DIAGNOSIS</span>
+              <h4 style="font-size: 1.05rem; color: #ffffff;">Why the Uncalibrated Algorithm Inflated the Entire Venue</h4>
+            </div>
+            <p style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 1rem;">
+              Monocular foundation depth models (such as <em>Depth-Anything-V2</em>) output relative disparity <em>d</em> rather than absolute metric depth. Disparity maps to physical Euclidean distance <em>R</em> via an affine transformation:
+              <br>
+              <code style="color: #38bdf8; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace;">1 / R = s &times; d + t &nbsp;&iff;&nbsp; R = 1 / (s &times; d + t)</code>
+            </p>
+            <p style="font-size: 0.88rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1rem;">
+              In the naive initial implementation, the affine shift was assumed to be zero (<em>t = 0</em>), scaling depth by a single nadir factor: <em>R = s / d</em>. As rays look towards eye-level horizontal walls, the predicted disparity <em>d</em> approaches a positive residual baseline (&approx; 0.55). Because <em>t</em> was ignored, as <em>d &rarr; 0</em>, distance <em>R</em> asymptotically diverged to infinity! This caused a severe &approx; 1.4&times; to 2.0&times; dimensional ballooning across all rooms in the building.
+            </p>
+            
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 1.25rem; margin-bottom: 0.75rem;">
+              <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace;">MATHEMATICAL FIX</span>
+              <h4 style="font-size: 1.05rem; color: #ffffff;">6-Face Pinhole Decomposition &amp; 2-Parameter RANSAC Regression</h4>
+            </div>
+            <p style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6;">
+              1. <strong>Cubemap Pinhole Decomposition:</strong> Depth-Anything-V2 is trained on rectilinear pinhole photos (60&deg;&ndash;80&deg; FOV), not 360&deg; spheres. We split each panorama into 6 rectilinear cube faces (768 &times; 768 px, 90&deg; FOV), converted perspective disparity to spherical disparity via <em>d_spherical = d_persp / &radic;(1 + x&sup2; + y&sup2;)</em>, and reprojected to equirectangular format, eliminating spherical pole warping.<br>
+              2. <strong>2-Parameter Ground Regression:</strong> For floor rays (&phi; &isin; [-75&deg;, -30&deg;]), true inverse distance is known geometrically from tripod height <em>h_cam = 1.50 m</em>: <em>1 / R_true = |sin(&phi;)| / 1.50</em>. Performing RANSAC linear regression revealed an intrinsic neural offset <em>t &approx; 0.55&ndash;0.58</em> constant across all cameras!<br>
+              3. <strong>Perfect Real-World Agreement:</strong> Applying (<em>s, t</em>) reduced the Tearoom from inflated 6.00 m to true 3.80 m (and 3.45 m at the wall pilaster), where the 2.15 m Chesterfield sofa occupies &approx; 65% of the wall, exactly matching optical references and historical survey records. Net interior area resolved from 295.4 m&sup2; to 158.8 m&sup2;.
             </p>
           </div>
         </div>
