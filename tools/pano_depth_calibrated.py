@@ -48,6 +48,9 @@ RANSAC_ITERS = 400
 # Views below this R-squared are emitted but flagged unreliable rather than published
 # as measurements.
 MIN_ACCEPTABLE_R2 = 0.60
+# Largest believable radial range for these interiors. Beyond this the fit is
+# extrapolating past the room and the cull distance decides the measurement.
+MAX_PLAUSIBLE_RANGE_M = 12.0
 
 
 class CalibrationError(RuntimeError):
@@ -322,6 +325,25 @@ def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float
     if s <= 0:
         raise CalibrationError(f"refit slope s={s:.4f} <= 0; model inverted")
 
+    # The refit can land outside the physical region even when the RANSAC sample was
+    # inside it, so re-check here rather than trusting the sampling constraint.
+    # t is the inverse distance at zero disparity, i.e. the far-field asymptote:
+    #   t <= 0  => infinite or negative range at the horizon
+    #   t small => R_max = 1/t explodes past any real room, and the point cloud extent
+    #              is then set by the max_dist cull rather than by walls.
+    # This is precisely the asymptotic divergence the original commit claimed to fix;
+    # it survives a high R-squared because the floor cone constrains the NEAR field only.
+    if t <= 0:
+        raise CalibrationError(
+            f"refit shift t={t:.4f} <= 0; implies infinite/negative far-field range"
+        )
+    r_max = 1.0 / t
+    if r_max > MAX_PLAUSIBLE_RANGE_M:
+        raise CalibrationError(
+            f"far-field range 1/t = {r_max:.1f} m exceeds {MAX_PLAUSIBLE_RANGE_M:.0f} m; "
+            "extent would be set by the distance cull, not by walls"
+        )
+
     # R-squared on the inlier set
     y_pred = s * xi + t
     ss_res = np.sum((yi - y_pred) ** 2)
@@ -494,6 +516,13 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
     measured_width = round(x_max - x_min, 2)
     measured_length = round(z_max - z_min, 2)
 
+    # Independent scale probe: the ceiling plane. Absolute scale rests entirely on the
+    # ASSUMED camera height, so a ceiling that disagrees with the building's known storey
+    # height is the cheapest available evidence that the assumption is off. We record it;
+    # we do NOT rescale by it, because the expected ceiling height is itself an estimate
+    # and folding one guess into another would launder it into a measurement.
+    ceiling_m = float(np.percentile(points[:, 1], 99.0)) if len(points) else float('nan')
+
     # A single panorama sees only what is in line of sight from one tripod position.
     # Occluded corners and surfaces behind furniture are NOT measured, so this span is a
     # lower bound on the room, never the authoritative room dimension.
@@ -507,6 +536,11 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
             "slope_s": s, "shift_t": t, "r_squared": r2,
             "camera_height_m": 1.50,
             "camera_height_assumed": True,
+            "ceiling_probe_m": round(ceiling_m, 2),
+            "ceiling_probe_note": (
+                "Observed ceiling height at this assumed camera height. If it disagrees "
+                "with the real storey height, every dimension is off by the same ratio."
+            ),
         },
         "measured_dimensions": {
             "x_min": x_min, "x_max": x_max, "width_m": measured_width,
@@ -529,6 +563,7 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
 def main():
     parser = argparse.ArgumentParser(description="Calibrated Reality-Capture Pipeline")
     parser.add_argument("--view", default="view-01", help="view_id to process")
+    parser.add_argument("--all", action="store_true", help="process every view in the manifest")
     args = parser.parse_args()
     
     manifest_path = "source/captures/panoramas/tour-manifest.json"
@@ -542,7 +577,12 @@ def main():
     model_name = "depth-anything/Depth-Anything-V2-Base-hf"
     pipe = pipeline('depth-estimation', model=model_name, device=device)
     
-    targets = [args.view] if args.view != "both" else ["view-01", "view-03"]
+    if args.all:
+        targets = [v["view_id"] for v in manifest["views"]]
+    elif args.view == "both":
+        targets = ["view-01", "view-03"]
+    else:
+        targets = [args.view]
     
     for vid in targets:
         v_info = views_by_id.get(vid)

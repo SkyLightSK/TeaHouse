@@ -1,21 +1,8 @@
 {
-  "_STALE": true,
-  "_WARNING": "Fit from inverted depth convention (s<0 is unphysical). Superseded; re-run on GPU.",
-  "status": "invalid_superseded",
   "view_id": "view-06",
   "heading_deg": 53.43,
-  "calibration": {
-    "slope_s": -0.28711855362779554,
-    "shift_t": 0.5784604426067173,
-    "r_squared": 0.32996924785162496
-  },
-  "measured_dimensions": {
-    "x_min": -2.12223744392395,
-    "x_max": 1.7621737718582153,
-    "width_m": 3.88,
-    "z_min": -2.1246955394744873,
-    "z_max": 1.7539503574371338,
-    "length_m": 3.88,
-    "area_m2": 15.05
-  }
+  "status": "failed",
+  "reason": "refit shift t=-0.0067 <= 0; implies infinite/negative far-field range",
+  "calibration": null,
+  "measured_dimensions": null
 }

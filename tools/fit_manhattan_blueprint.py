@@ -56,14 +56,28 @@ def load_calibrated_boxes(spatial_dir, view_to_space, min_r2=0.60):
         grouped.setdefault(code, []).append((s["view_id"], dims, float(r2)))
 
     for code, items in grouped.items():
-        xs0 = min(d["x_min"] for _, d, _ in items)
-        xs1 = max(d["x_max"] for _, d, _ in items)
-        zs0 = min(d["z_min"] for _, d, _ in items)
-        zs1 = max(d["z_max"] for _, d, _ in items)
+        # Each view's cloud sits in its OWN tripod-centred frame (x, z ~ 0 at the camera).
+        # Unioning raw bounds across views therefore overlays two local frames and
+        # inflates the room - that bug produced an 11 m "entrance lobby". Until
+        # align_multi_bev.py supplies validated world transforms, take the per-view
+        # SPAN and keep the largest, which is the best-supported lower bound from a
+        # single vantage point.
+        spans = [(v, d["x_max"] - d["x_min"], d["z_max"] - d["z_min"], r) for v, d, r in items]
+        best = max(spans, key=lambda s: s[1] * s[2])
+        v_best, w, l, r_best = best
+        # Report in a local frame centred on the camera; absolute placement is the job
+        # of registration, which has not been validated.
         out[code] = {
-            "box": {"x": [round(xs0, 2), round(xs1, 2)], "z": [round(zs0, 2), round(zs1, 2)]},
+            "box": {"x": [round(-w / 2.0, 2), round(w / 2.0, 2)],
+                    "z": [round(-l / 2.0, 2), round(l / 2.0, 2)]},
             "views": [v for v, _, _ in items],
-            "r_squared": round(min(r for _, _, r in items), 3),
+            "driving_view": v_best,
+            "r_squared": round(r_best, 3),
+            "per_view_spans": [
+                {"view": v, "width_m": round(ww, 2), "length_m": round(ll, 2)}
+                for v, ww, ll, _ in spans
+            ],
+            "placement_validated": False,
         }
     return out
 
@@ -150,8 +164,11 @@ def build_architectural_model(spatial_dir="exports/spatial", manifest_path="sour
             provenance[code] = {
                 "source": "calibrated",
                 "views": calibrated[code]["views"],
+                "driving_view": calibrated[code]["driving_view"],
+                "per_view_spans": calibrated[code]["per_view_spans"],
                 "r_squared": calibrated[code]["r_squared"],
                 "is_lower_bound": True,
+                "placement_validated": False,
             }
         else:
             boxes[code] = est

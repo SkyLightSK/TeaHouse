@@ -1,0 +1,25 @@
+{
+  "view_id": "view-12",
+  "heading_deg": 298.97,
+  "status": "ok",
+  "calibration": {
+    "slope_s": 0.18224243073850435,
+    "shift_t": 0.45802104514343,
+    "r_squared": 0.8700346429523765,
+    "camera_height_m": 1.5,
+    "camera_height_assumed": true,
+    "ceiling_probe_m": 3.25,
+    "ceiling_probe_note": "Observed ceiling height at this assumed camera height. If it disagrees with the real storey height, every dimension is off by the same ratio."
+  },
+  "measured_dimensions": {
+    "x_min": -1.6622668504714966,
+    "x_max": 1.753556728363037,
+    "width_m": 3.42,
+    "z_min": -1.9397315979003906,
+    "z_max": 1.9694942235946655,
+    "length_m": 3.91,
+    "area_m2": 13.37,
+    "is_lower_bound": true,
+    "note": "Single-viewpoint line-of-sight span; occluded extents not captured."
+  }
+}

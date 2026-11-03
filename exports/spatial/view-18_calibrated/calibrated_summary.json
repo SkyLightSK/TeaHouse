@@ -1,0 +1,8 @@
+{
+  "view_id": "view-18",
+  "heading_deg": 335.97,
+  "status": "failed",
+  "reason": "ground-ray correlation -0.617 < +0.30; disparity map is inverted or the floor cone is occluded. Refusing to fit.",
+  "calibration": null,
+  "measured_dimensions": null
+}

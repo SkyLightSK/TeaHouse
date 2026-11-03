@@ -101,14 +101,19 @@ def test_robust_to_furniture_outliers():
     print(f"  PASS robust to 25% outliers (s={s:.3f}, R2={r2:.3f})")
 
 
-def test_stored_artifacts_are_rejected():
-    """Committed disparity maps are inverted; the gate must refuse every one."""
+def test_stored_artifacts_are_valid():
+    """
+    The committed disparity maps are now regenerated under the corrected convention,
+    so every one that calibrates must do so with a physical, non-divergent fit.
+    (Before the fix these were all inverted and every stored slope was negative.)
+    """
     import cv2
     root = Path(__file__).resolve().parents[1]
     maps = sorted(root.glob("exports/spatial/*_calibrated/calibrated_disparity.png"))
     if not maps:
         print("  SKIP no stored artifacts present")
         return
+    fitted = rejected = 0
     for m in maps:
         im = cv2.imread(str(m), cv2.IMREAD_UNCHANGED)
         if im is None:
@@ -116,11 +121,16 @@ def test_stored_artifacts_are_rejected():
         if im.ndim == 3:
             im = im[..., 0]
         try:
-            s, _, _ = cal.calibrate_affine_scale_and_shift(im.astype(np.float32) / 255.0, CAM_H)
+            s, t, _ = cal.calibrate_affine_scale_and_shift(im.astype(np.float32) / 255.0, CAM_H)
         except cal.CalibrationError:
+            rejected += 1          # an honest refusal is a valid outcome
             continue
-        raise AssertionError(f"{m.parent.name} should be rejected, got s={s:.4f}")
-    print(f"  PASS all {len(maps)} stored maps rejected as inverted")
+        assert s > 0, f"{m.parent.name}: negative slope {s}"
+        assert t > 0, f"{m.parent.name}: non-positive shift {t}"
+        assert 1.0 / t <= cal.MAX_PLAUSIBLE_RANGE_M, f"{m.parent.name}: divergent far field"
+        fitted += 1
+    assert fitted > 0, "no stored map calibrated successfully"
+    print(f"  PASS {fitted} stored maps fit physically, {rejected} honestly rejected")
 
 
 if __name__ == "__main__":
@@ -130,7 +140,7 @@ if __name__ == "__main__":
         test_rejects_inverted_disparity,
         test_never_returns_negative_slope,
         test_robust_to_furniture_outliers,
-        test_stored_artifacts_are_rejected,
+        test_stored_artifacts_are_valid,
     ):
         try:
             fn()

@@ -1,9 +1,11 @@
 # Measurement status — spatial blueprint pipeline
 
-**Short version: this branch contains no surveyed dimensions.** Everything published as
-"measured" in commits `c2dd27d` and `d8324b4` was either a hand-entered estimate or the
-output of an inverted depth model. This file records what was wrong, what is fixed, and
-what still has to run before any number here can be cited.
+**Short version: room PROPORTIONS are now measured and trustworthy. Absolute SIZES are
+still ~20% too large and must not be cited.** Everything published as "measured" in
+commits `c2dd27d` and `d8324b4` was either a hand-entered estimate or the output of an
+inverted depth model. The pipeline has since been fixed and re-run on GPU; this file
+records what was wrong, what the re-run produced, and what remains before any absolute
+number here can be cited.
 
 ## The three defects
 
@@ -76,21 +78,97 @@ the proper convention:
 8 reliable, 1 honestly rejected. Implied distances are now monotonically decreasing in
 disparity and land in the 1.6–4.5 m range appropriate to these interiors.
 
+## Pipeline has now been re-run (RTX 5090, torch 2.11+cu130)
+
+Depth inference was re-run over all 23 panoramas with the corrected code. The
+convention guard fired on live inference, confirming the diagnosis from the artifacts:
+
+```
+[!] Model emitted DEPTH (nadir 2.081 <= horizon 3.379); inverting to disparity.
+[+] RANSAC Ground Fit: y = 0.6315 * d + (0.0842) [R2 = 0.968, corr = +0.819]
+[+] Floor rays: 522,764 total, 31,899 inliers (64%)
+```
+
+Final state: **14 views calibrate reliably (R2 0.87-0.978), 9 are rejected.**
+Rejections are honest refusals, not failures to produce output:
+
+| reason | count | meaning |
+|---|---|---|
+| far-field range 1/t > 12 m | 5 | extent would be set by the distance cull, not walls |
+| ground-ray correlation < +0.30 | 3 | nadir occluded by tripod/clutter; no usable floor |
+| refit shift t <= 0 | 1 | implies infinite/negative range at the horizon |
+
+Two further defects were found and fixed only because the run happened:
+
+1. **Cross-frame union.** `load_calibrated_boxes` unioned per-view bounds, but each
+   cloud sits in its own tripod-centred frame. Overlaying two local frames produced an
+   "entrance lobby" of 7.6 x 11.0 m. Now the largest single-view span is used and the
+   per-view spans are published so disagreement is visible.
+2. **Far-field divergence.** `t` constrained only during RANSAC sampling, not the
+   refit. view-06 came back with t = -0.0067 (negative distance at the horizon) while
+   still reporting R2 = 0.962 - the floor cone constrains the near field only, so a high
+   R2 does not imply a sane far field.
+
+`room_schedule.json` is now **8 of 9 rooms calibrated** (TB falls back to hand estimate;
+both its views were rejected).
+
+## The absolute scale is still wrong, and we can prove it
+
+Ceiling height is an independent probe: it was never fitted, so it tests the one
+assumption everything rests on. Across reliable views the ceiling lands at
+**3.10-3.42 m (median 3.42)** against this project's own 2.6-2.9 m estimate.
+
+That is a consistent ~15-25% over-scale, and it points at `camera_height = 1.50 m`.
+If the true ceiling is 2.70 m, the implied capture height is 1.50 / (3.35/2.70) =
+**~1.21 m** - plausible for a handheld or low-tripod 360 rig, and not 1.50 m.
+
+The code records `ceiling_probe_m` per view but deliberately does **not** rescale by it.
+The expected ceiling height is itself an estimate; folding one guess into another would
+launder a guess into a measurement. Scale needs one real reference, not a second guess.
+
+So: room *proportions* are now trustworthy (views within a room agree - AS reads
+3.86x3.58, 3.78x4.19, 4.24x4.29 across three viewpoints). Absolute *dimensions* are
+still systematically inflated by an unknown factor near 1.2.
+
+## Multi-view parallax (stereo triangulation): yes, and it is the right next step
+
+Asked whether real sizes can come from stereo instead of monocular depth. Checked, and
+the tour geometry supports it well:
+
+- **Baselines are usable.** GPS positions give a mean consecutive spacing of **3.73 m**
+  (2.8-3.0 m within rooms), and all 23 positions are distinct.
+- **Overlap is ample.** ORB matching on consecutive pairs yields **317-395 good matches**
+  (Hamming < 50) per pair at 2048x1024.
+- **Precision is far better than monocular.** For spherical stereo,
+  `dR = R^2 * dtheta / B`. At 10000 px equirect width, dtheta = 0.63 mrad, so with
+  B = 2.8 m at R = 3 m the error is ~0.2 cm per matched pixel; even at 5 px matching
+  error that is **~5 cm at 3 m range**.
+
+The decisive advantage is not precision but **provenance**: triangulation derives scale
+from the baseline between two real camera positions, so it needs no assumed camera
+height at all. It replaces the single assumption that is currently wrong.
+
+Caveats worth planning around: GPS baselines indoors are themselves uncertain and should
+be solved rather than trusted (bundle adjustment over the matches, using GPS only as an
+initial guess); textureless walls will not match and will leave holes that monocular
+depth can fill; and 2.8 m baselines inside 4 m rooms mean wide-angle geometry with real
+occlusion between views.
+
+Recommended order: solve relative poses from the ORB matches, triangulate the matched
+points, use that metric reconstruction to **solve camera height as an unknown** rather
+than assume it, then re-run the monocular pass with the solved height to densify.
+
 ## What is still NOT done
 
-1. **Depth inference has not been re-run.** No torch/CUDA in this environment. The table
-   above recalibrates *stored* maps; it does not regenerate them. Until
-   `pano_depth_calibrated.py --all` runs on a GPU box, the point clouds, BEV rasters and
-   per-view summaries on disk are still the old inverted ones.
-2. **All 9 room boxes remain hand estimates.** `rooms_calibrated` is 0.
-3. **Camera height is assumed, not measured.** `camera_height = 1.50 m` sets the absolute
+
+1. **Camera height is assumed, not measured.** `camera_height = 1.50 m` sets the absolute
    scale of everything. A 10% error there is a 10% error in every dimension. The real
    tripod height for the Nov-2017 capture is unknown.
-4. **Single-viewpoint spans are lower bounds.** One tripod position cannot see occluded
+2. **Single-viewpoint spans are lower bounds.** One tripod position cannot see occluded
    corners, so a calibrated box is a floor on the room's size, not its dimensions.
-5. **Wall thickness (200 mm), door widths and stair counts are unverified** design
+3. **Wall thickness (200 mm), door widths and stair counts are unverified** design
    choices, not observations.
-6. **Multi-view registration is unvalidated.** `align_multi_bev.py` has no loop-closure
+4. **Multi-view registration is unvalidated.** `align_multi_bev.py` has no loop-closure
    residual, so global layout error is unquantified.
 
 ## Do not do with this data

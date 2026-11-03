@@ -1,21 +1,25 @@
 {
-  "_STALE": true,
-  "_WARNING": "Fit from inverted depth convention (s<0 is unphysical). Superseded; re-run on GPU.",
-  "status": "invalid_superseded",
   "view_id": "view-22",
   "heading_deg": 54.67,
+  "status": "ok",
   "calibration": {
-    "slope_s": -0.30876311545204926,
-    "shift_t": 0.5439469090011332,
-    "r_squared": 0.2870927205326945
+    "slope_s": 0.5670351107779544,
+    "shift_t": 0.11406824655118805,
+    "r_squared": 0.9781157511849379,
+    "camera_height_m": 1.5,
+    "camera_height_assumed": true,
+    "ceiling_probe_m": 5.59,
+    "ceiling_probe_note": "Observed ceiling height at this assumed camera height. If it disagrees with the real storey height, every dimension is off by the same ratio."
   },
   "measured_dimensions": {
-    "x_min": -1.894824504852295,
-    "x_max": 2.1135077476501465,
-    "width_m": 4.01,
-    "z_min": -2.039090633392334,
-    "z_max": 2.4033374786376953,
-    "length_m": 4.44,
-    "area_m2": 17.8
+    "x_min": -2.4055488109588623,
+    "x_max": 2.496809959411621,
+    "width_m": 4.9,
+    "z_min": -2.553495168685913,
+    "z_max": 3.554229497909546,
+    "length_m": 6.11,
+    "area_m2": 29.94,
+    "is_lower_bound": true,
+    "note": "Single-viewpoint line-of-sight span; occluded extents not captured."
   }
 }

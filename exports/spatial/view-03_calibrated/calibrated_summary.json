@@ -1,21 +1,8 @@
 {
-  "_STALE": true,
-  "_WARNING": "Fit from inverted depth convention (s<0 is unphysical). Superseded; re-run on GPU.",
-  "status": "invalid_superseded",
   "view_id": "view-03",
   "heading_deg": 142.51,
-  "calibration": {
-    "slope_s": -0.09036245731899349,
-    "shift_t": 0.544321914067951,
-    "r_squared": 0.03967184090072584
-  },
-  "measured_dimensions": {
-    "x_min": -1.9655561447143555,
-    "x_max": 1.949350357055664,
-    "width_m": 3.91,
-    "z_min": -1.8029625415802002,
-    "z_max": 1.8082178831100464,
-    "length_m": 3.61,
-    "area_m2": 14.12
-  }
+  "status": "failed",
+  "reason": "ground-ray correlation -0.234 < +0.30; disparity map is inverted or the floor cone is occluded. Refusing to fit.",
+  "calibration": null,
+  "measured_dimensions": null
 }
