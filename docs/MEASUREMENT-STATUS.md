@@ -187,3 +187,87 @@ than assume it, then re-run the monocular pass with the solved height to densify
 3. Add loop-closure residuals to `align_multi_bev.py` and report drift.
 4. Validate against one hand-measured ground truth distance in the real space.
 5. Only then let `load_calibrated_boxes()` promote rooms to `calibrated`.
+
+---
+
+## Review: Baiker's stereo pipeline (`80f0523`, `121ed88`)
+
+Baiker implemented multi-view stereo in parallel with this work. Reviewed at
+`origin/feat/spatial-blueprint-pipeline` = `121ed88`.
+
+### What is genuinely good
+
+The **correspondence machinery is sound and worth keeping**:
+
+- 8 yaws x 4 pitches of pinhole crops, so SIFT runs on rectilinear images rather than
+  distorted equirect pixels - the right call.
+- Both cameras are rotated into a shared world frame (`yaw = yw - heading`), so the
+  GPS-derived absolute bearing is applied correctly.
+- Bidirectional cross-check plus Fundamental-Matrix RANSAC at 2.0 px (`121ed88`) is
+  real outlier rejection, and the follow-up commit fixing perceptual aliasing shows
+  the match quality was actually inspected.
+- Parallax floor of 0.8 deg and a relative ray-residual test correctly discard
+  degenerate near-parallel intersections.
+
+### Why its numbers still cannot be published
+
+**1. Scale reintroduces the assumption stereo was meant to remove.**
+
+```python
+b_tripod = 1.50 / abs(y_floor_u)   # the SAME assumed 1.50 m camera height
+b_sofa   = 2.15 / sofa_span_u      # assumed "standard Chesterfield" width
+B_metric = 0.5 * (b_tripod + b_sofa)
+B_metric = np.clip(B_metric, 1.80, 2.20)
+```
+
+The entire value of triangulation is that the baseline between two real camera
+positions fixes scale **without** assuming camera height. Here height is half the
+estimate and a furniture guess is the other half.
+
+**2. The reported baseline is a clamp, not a measurement.** `baseline_meters` is
+exactly 2.20 - the clip ceiling - so the average exceeded the bound and was truncated.
+A value pinned to a hardcoded limit carries no information.
+
+**3. GPS gives the baseline directly, and it was not used.** The manifest places
+view-01 and view-03 **2.92 m** apart. The pipeline already trusts GPS for the
+translation *direction* (`link_ang = 10.38 deg`, which is the correct GPS bearing) but
+not for its *length*. Using 2.92 m instead of 2.20 m scales every dimension by 1.328:
+TR 2.67 x 5.75 becomes **3.55 x 7.64 m**.
+
+**4. Wall planes rest on very few points.** `triangulated_topdown_bev.png` shows
+landmarks in three small clusters; west and east walls are nearly empty, and the
+drawn rectangle is a fit to almost nothing in those directions. Each plane also has a
+hardcoded fallback (`else -1.05`, `else 2.85`, ...) that silently substitutes a literal
+when a direction yields no points.
+
+**5. Two published figures are not measurements.**
+- `width_at_pilaster_m` = 2.22 is `width - 0.45`, a hardcoded subtraction.
+- `pilaster_bump_cm` = 0.8 is below the method's own ~1.5 cm ray residual. The
+  "pilaster" and "alcove" planes are statistically the same wall.
+
+### Convergence across all methods (Tearoom)
+
+| source | dims (m) | note |
+|---|---|---|
+| main estimate | 3.50 x 6.50 | eyeball, honestly labelled unmeasured |
+| old "measured" | 3.80 x 5.40 | hardcoded dict, false provenance |
+| monocular (this branch) | 5.36 x 6.42 | R2 0.968, ~20% over-scale |
+| monocular, ceiling-corrected | 4.23 x 5.07 | assumes 2.70 m ceiling |
+| stereo (Baiker) | 2.67 x 5.75 | B clamped at 2.20 m |
+| stereo @ GPS baseline | 3.55 x 7.64 | B = 2.92 m from manifest |
+
+Width is converging on **3.5-4.2 m**. Length remains unresolved across **5.1-7.6 m**.
+Independent methods agreeing on width is real progress; the length spread means no
+length figure should be quoted yet.
+
+### Recommended merge
+
+Keep Baiker's correspondence and epipolar code. Replace the scale block with:
+
+1. `B` = GPS separation (2.92 m for this pair), carried as an uncertainty, not a constant.
+2. Delete the `clip()`; if an estimate leaves physical bounds, raise rather than truncate.
+3. Delete the per-plane literal fallbacks; a direction with no points is a missing
+   measurement, not a default value.
+4. Drop `width_at_pilaster_m` and `pilaster_bump_cm` until the residual supports them.
+5. Then solve camera height as an unknown from the metric reconstruction - which is the
+   thing that would finally fix the monocular pass too.
