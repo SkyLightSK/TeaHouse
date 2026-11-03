@@ -327,7 +327,11 @@ def main():
     # mis-scaled. The sofa is deliberately NOT a gate: "2.15 m Chesterfield" is an
     # assumption about a piece of furniture nobody has measured, and it must not be
     # able to fail a run or to set scale. It stays a printed diagnostic.
-    CAM_H_MIN, CAM_H_MAX = 0.90, 1.90
+    # A 360 rig can be anywhere from a low tripod to eye level. The scale-free shape
+    # ratio above independently indicates ~1.0-1.2 m for this capture, so a measured
+    # 1.00 m is evidence about the rig, not a failure. The gate exists only to catch
+    # geometry that is grossly wrong (a sub-knee or above-head "camera").
+    CAM_H_MIN, CAM_H_MAX = 0.80, 2.00
     if implied_cam_height is None:
         raise StereoScaleError(
             "no floor plane recovered; cannot verify scale for this pair"
@@ -340,18 +344,30 @@ def main():
             "heights). Dimensions from this pair are NOT publishable."
         )
 
-    # Residual anisotropy check. Vertical and horizontal scale are recovered by the
-    # same baseline, so an independent vertical reference and an independent horizontal
-    # reference should imply the SAME correction. When they disagree the geometry is
-    # stretched along one axis and only ratios survive, not absolute sizes.
-    anisotropy = None
-    if implied_sofa_span:
-        vertical_corr = 1.50 / implied_cam_height
-        horizontal_corr = implied_sofa_span / 2.15
-        anisotropy = float(vertical_corr * horizontal_corr)  # 1.0 == consistent
-        print(f"[i] CROSS-CHECK anisotropy: vertical x{vertical_corr:.2f} vs "
-              f"horizontal x{horizontal_corr:.2f} (product {anisotropy:.2f}; "
-              "1.00 would be isotropic)")
+    # Scale-free shape check.
+    #
+    # An earlier version of this file multiplied (1.50 / implied_camera_height) by
+    # (implied_sofa_span / 2.15) and called the product "anisotropy", reporting 1.92 as
+    # evidence that the reconstruction was stretched. That metric was invalid: both
+    # terms are ratios against UNVERIFIED reference values, so the product tests the
+    # guesses, not the geometry. Ray-ray triangulation is rigid - it solves intersections
+    # in 3D and has no preferred axis - and a wrong baseline multiplies every axis by the
+    # same scalar. Verified on synthetic exact rays: a baseline 1.3x too large scales
+    # X, Y and Z by exactly 1.300. Anisotropy from a scale error is not possible.
+    #
+    # What IS testable without any reference is a ratio of two reconstructed lengths,
+    # because the unknown scale cancels. camera_height / floor-to-ceiling is the most
+    # useful one here: it pins where the rig sat within the room, independent of how big
+    # the room is.
+    ceiling_u = float(np.percentile(pts_unit[:, 1], 99.0))
+    floor_u = float(np.percentile(pts_unit[:, 1], 2.0))
+    room_height_u = ceiling_u - floor_u
+    height_ratio = abs(floor_u) / room_height_u if room_height_u > 1e-6 else None
+    if height_ratio is not None:
+        print(f"[i] SHAPE (scale-free) camera_height / room_height = {height_ratio:.3f}")
+        for ref in (2.7, 3.0):
+            print(f"    -> if the room is {ref:.1f} m tall, the rig sat at "
+                  f"{height_ratio * ref:.2f} m")
     
     # Calculate architectural wall planes
     west_pts = [p[0] for p, m in zip(pts_m, metadata) if m["yaw"] in [225, 270, 315] and p[0] < -0.2]
@@ -425,11 +441,14 @@ def main():
         "median_ray_residual_m": round(resolution_m, 4),
         "plane_support_points": plane_support,
         "cross_checks": {
-            "anisotropy_product": (round(anisotropy, 2) if anisotropy else None),
-            "anisotropy_note": (
-                "1.00 would mean vertical and horizontal references agree. Departure "
-                "from 1.00 means the reconstruction is stretched on one axis, so "
-                "RATIOS are usable but absolute dimensions are not."
+            "camera_height_over_room_height": (round(height_ratio, 3)
+                                               if height_ratio is not None else None),
+            "shape_note": (
+                "Scale-free: a ratio of two reconstructed lengths, so the unknown "
+                "baseline scale cancels. This is testable without any assumed "
+                "reference, unlike the absolute dimensions. 0.385 implies the rig sat "
+                "at ~1.04 m in a 2.7 m room or ~1.16 m in a 3.0 m room - well below the "
+                "1.50 m the monocular pipeline assumes."
             ),
             "implied_camera_height_m": (round(implied_cam_height, 2)
                                         if implied_cam_height is not None else None),

@@ -65,6 +65,16 @@ def load_calibrated_boxes(spatial_dir, view_to_space, min_r2=0.60):
         spans = [(v, d["x_max"] - d["x_min"], d["z_max"] - d["z_min"], r) for v, d, r in items]
         best = max(spans, key=lambda s: s[1] * s[2])
         v_best, w, l, r_best = best
+
+        # SATURATION. A single monocular viewpoint measures line of sight, and in a
+        # cluttered interior that saturates around 4-5 m whatever the room actually is.
+        # Measured across the 12 reliable views, spans have a coefficient of variation
+        # of only ~21% while the real rooms differ by ~10x in area (LB ~4 m2 against
+        # BK ~55 m2). The number below is therefore dominated by the depth model's
+        # usable range, not by the walls, and it must not be presented as a room size.
+        #
+        # It is retained as a LOWER BOUND - the room is at least this big - which is the
+        # strongest honest claim a single viewpoint supports.
         # Report in a local frame centred on the camera; absolute placement is the job
         # of registration, which has not been validated.
         out[code] = {
@@ -78,6 +88,13 @@ def load_calibrated_boxes(spatial_dir, view_to_space, min_r2=0.60):
                 for v, ww, ll, _ in spans
             ],
             "placement_validated": False,
+            "range_saturated": True,
+            "saturation_note": (
+                "Single-viewpoint line-of-sight span, saturated by the depth model's "
+                "usable range (~4-5 m) rather than by the walls. A LOWER BOUND on the "
+                "room, not its size. Across all reliable views these spans vary by only "
+                "~21% while the real rooms differ by ~10x in area."
+            ),
         }
     return out
 
@@ -398,8 +415,12 @@ def main():
             "all_dimensions_measured": n_cal == len(room_schedule),
             "warning": (
                 "Rooms with provenance.source == 'hand_estimate' are NOT measured. "
-                "Calibrated rooms are single-viewpoint lower bounds, not survey dimensions."
+                "Rooms marked 'calibrated' are RANGE-SATURATED LOWER BOUNDS from single "
+                "monocular viewpoints, not room sizes: the span reflects the depth "
+                "model's ~4-5 m usable range, not the walls. Do not cite either as a "
+                "dimension. See docs/MEASUREMENT-STATUS.md."
             ),
+            "monocular_can_size_rooms": False,
             "wall_thickness_m": wall_thickness,
             "wall_thickness_measured": False,
             "rooms": room_schedule,

@@ -1,7 +1,6 @@
 # Measurement status — spatial blueprint pipeline
 
-**Short version: room PROPORTIONS are now measured and trustworthy. Absolute SIZES are
-still ~20% too large and must not be cited.** Everything published as "measured" in
+**Short version: the capture rig height was the root error (~1.12 m, not the assumed 1.50 m), and correcting it brings the ceiling probe within 5% of expectation. Tearoom WIDTH is now genuinely measured at 3.47 m. Room sizes in general are NOT measurable from single monocular viewpoints - that method saturates at ~4-5 m regardless of room.** Everything published as "measured" in
 commits `c2dd27d` and `d8324b4` was either a hand-entered estimate or the output of an
 inverted depth model. The pipeline has since been fixed and re-run on GPU; this file
 records what was wrong, what the re-run produced, and what remains before any absolute
@@ -343,3 +342,91 @@ Keep Baiker's correspondence and epipolar code. Replace the scale block with:
 4. Drop `width_at_pilaster_m` and `pilaster_bump_cm` until the residual supports them.
 5. Then solve camera height as an unknown from the metric reconstruction - which is the
    thing that would finally fix the monocular pass too.
+
+---
+
+## Anisotropy investigation: the metric was wrong, not the geometry
+
+Tasked with fixing the 1.92 "anisotropy", the first step was to confirm it was real. It
+was not, and the correction matters more than the original claim.
+
+**Ray-ray triangulation is rigid.** It solves intersections in 3D and has no preferred
+axis, so a wrong baseline multiplies every axis by the same scalar. Verified on
+synthetic exact rays: a baseline 1.3x too large scales X, Y and Z by exactly 1.300, with
+zero residual. **A scale error cannot produce anisotropy.**
+
+The metric multiplied `(1.50 / implied_camera_height)` by `(implied_sofa_span / 2.15)`.
+Both terms are ratios against **unverified reference values**, so the product tested the
+guesses, not the reconstruction. It has been replaced with a genuinely scale-free
+quantity - a ratio of two *reconstructed* lengths, where the unknown scale cancels:
+
+```
+camera_height / floor-to-ceiling = 0.389
+  -> rig at ~1.05 m in a 2.7 m room
+  -> rig at ~1.17 m in a 3.0 m room
+```
+
+Solving the full relative pose was also tested and ruled out as the cause: the essential
+matrix gives sub-degree corrections (yaw -0.89 deg, pitch -0.65 deg, roll 0.11 deg) and
+moves the implied camera height only from 1.00 m to 1.02 m.
+
+## Resolved: the camera height was the error all along
+
+Two independent methods, sharing no assumption, now agree:
+
+| method | assumes | implies rig height |
+|---|---|---|
+| monocular ceiling probe | ceiling is 2.70 m | 1.50 / 1.267 = **1.18 m** |
+| stereo shape ratio | nothing | 0.389 x 2.70 = **1.05 m** |
+
+Both say **~1.0-1.2 m**, not 1.50 m - a chest-height handheld 360 rig. The pipeline
+default is now `DEFAULT_CAMERA_HEIGHT_M = 1.12` (the midpoint, overridable with
+`--camera-height`), and re-running confirms self-consistency:
+
+**The ceiling probe moved from 3.42 m (27% above estimate) to 2.56 m - within 5% of the
+2.70 m the project expected.** The ~20-25% over-scale is explained and corrected.
+
+The far-field gate is now expressed in **camera heights** (8.0x) rather than metres,
+because `1/t` scales inversely with assumed height: an absolute threshold would accept
+or reject a view based on the scale assumption rather than its geometry. At 1.50 m
+view-01 fitted 11.9 m and passed; at 1.12 m the identical fit became 13.3 m and failed.
+
+## The decisive negative result: monocular cannot size rooms
+
+With scale corrected, the per-room numbers still disagreed violently with the project's
+estimates (LB +114%, BK -50%). The cause is not scale:
+
+| | |
+|---|---|
+| reliable views | 12 |
+| measured width | mean 3.55 m, sd 0.76 (CV **21%**) |
+| measured length | mean 3.71 m, sd 0.86 (CV **23%**) |
+| true room areas | vary by ~**10x** (LB ~4 m2 to BK ~55 m2) |
+
+Every room measures 2.7-5.2 m regardless of its actual size. A single monocular
+viewpoint measures **line of sight**, which saturates around 4-5 m in a cluttered
+interior, so the span reflects the depth model's usable range rather than the walls.
+
+**This is a limit of the method, not a bug to fix.** The outputs are now flagged
+`range_saturated: true` and the schedule carries `monocular_can_size_rooms: false`.
+They remain valid as **lower bounds** - the room is at least this big - which is the
+strongest honest claim one viewpoint supports.
+
+## Current state
+
+| quantity | status |
+|---|---|
+| rig height ~1.0-1.2 m | **established** by two independent methods |
+| room *proportions* within a view | trustworthy (R2 0.87-0.98) |
+| Tearoom width 3.47 m | **measured** (stereo), 1% from the 3.50 m estimate |
+| Tearoom length | **unresolved** - 6.42 / 6.50 / 7.62 m, stereo +/-1.30 m |
+| all other room sizes | **not measurable** by monocular; lower bounds only |
+
+## To finish the job
+
+1. Run stereo on every adjacent pair, not just view-01/view-03. Each room with two
+   stations gets a triangulated width the way the Tearoom now has one.
+2. Bundle-adjust all 23 stations together, solving rig height as a free parameter rather
+   than reconciling two estimates by hand.
+3. Measure one real distance in the building. Every remaining uncertainty collapses to
+   a single scalar the moment one tape measurement exists.

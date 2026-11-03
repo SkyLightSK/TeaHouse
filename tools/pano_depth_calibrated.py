@@ -48,9 +48,28 @@ RANSAC_ITERS = 400
 # Views below this R-squared are emitted but flagged unreliable rather than published
 # as measurements.
 MIN_ACCEPTABLE_R2 = 0.60
-# Largest believable radial range for these interiors. Beyond this the fit is
-# extrapolating past the room and the cull distance decides the measurement.
-MAX_PLAUSIBLE_RANGE_M = 12.0
+# Largest believable radial range for these interiors, expressed in CAMERA HEIGHTS
+# rather than metres. 1/t scales inversely with the assumed camera height, so an
+# absolute metre threshold would reject or accept a view based on the scale assumption
+# rather than on its geometry: at 1.50 m view-01 fits 11.9 m and passes, and at 1.12 m
+# the identical fit becomes 13.3 m and fails. A scale-free multiple keeps the gate
+# testing the same thing whatever height is assumed. 8.0 reproduces the original 12 m
+# at the original 1.50 m.
+MAX_RANGE_IN_CAMERA_HEIGHTS = 8.0
+# Capture rig height. This single number sets the ABSOLUTE scale of every dimension
+# this pipeline produces, so it is stated once, here, with its evidence.
+#
+# 1.50 m was an unverified assumption, and two independent lines of evidence now say it
+# is ~25% too high, which matches this pipeline's ~20-25% over-scale exactly:
+#   * the ceiling probe in this pipeline reads 3.42 m where the project estimates
+#     2.70 m, implying a true rig height of 1.50 / 1.267 = 1.18 m;
+#   * the stereo pipeline's scale-free shape ratio (camera_height / room_height =
+#     0.389, which assumes no reference at all) implies 1.05 m in a 2.70 m room.
+#
+# Both land at ~1.0-1.2 m, consistent with a chest-height handheld 360 rig. The default
+# below is the midpoint. It remains an ESTIMATE, not a measurement - override it with
+# --camera-height once the real value is known.
+DEFAULT_CAMERA_HEIGHT_M = 1.12
 
 
 class CalibrationError(RuntimeError):
@@ -245,7 +264,7 @@ def run_pinhole_cubemap_depth(orig_img: Image.Image, pipe, face_size: int = 768,
     return equirect_rgb, equirect_disp
 
 
-def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float = 1.50) -> tuple[float, float, float]:
+def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float = DEFAULT_CAMERA_HEIGHT_M) -> tuple[float, float, float]:
     """
     Solve the 2-parameter affine equation on the ground floor:
     1 / R_true = |sin(phi)| / h_cam = s * d + t
@@ -338,10 +357,12 @@ def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float
             f"refit shift t={t:.4f} <= 0; implies infinite/negative far-field range"
         )
     r_max = 1.0 / t
-    if r_max > MAX_PLAUSIBLE_RANGE_M:
+    max_range = MAX_RANGE_IN_CAMERA_HEIGHTS * camera_height
+    if r_max > max_range:
         raise CalibrationError(
-            f"far-field range 1/t = {r_max:.1f} m exceeds {MAX_PLAUSIBLE_RANGE_M:.0f} m; "
-            "extent would be set by the distance cull, not by walls"
+            f"far-field range 1/t = {r_max:.1f} m exceeds {max_range:.1f} m "
+            f"({MAX_RANGE_IN_CAMERA_HEIGHTS:.0f} camera heights); extent would be set "
+            "by the distance cull, not by walls"
         )
 
     # R-squared on the inlier set
@@ -359,7 +380,7 @@ def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float
 
 
 def unproject_calibrated(rgb_arr: np.ndarray, disparity: np.ndarray, s: float, t: float,
-                         camera_height: float = 1.50, max_dist: float = 12.0, heading_deg: float = 0.0):
+                         camera_height: float = DEFAULT_CAMERA_HEIGHT_M, max_dist: float = 12.0, heading_deg: float = 0.0):
     """
     Unproject using the calibrated affine inverse depth equation:
     1 / R = s * d + t  =>  R = 1 / max(s * d + t, 0.05)
@@ -459,7 +480,8 @@ def create_bev_slices(points: np.ndarray, meter_range: float = 6.0, resolution_m
     return wall_img, wall_grid
 
 
-def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output_dir: str):
+def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output_dir: str,
+                 camera_height: float = DEFAULT_CAMERA_HEIGHT_M):
     """Run calibrated pipeline on a single viewpoint."""
     print(f"\n==================================================")
     print(f"[*] Processing {view_id} with Calibrated Algorithm")
@@ -475,7 +497,7 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
     # Step 2: 2-parameter affine regression.
     # A view that cannot be honestly calibrated is SKIPPED, not back-filled with a guess.
     try:
-        s, t, r2 = calibrate_affine_scale_and_shift(disp_eq, camera_height=1.50)
+        s, t, r2 = calibrate_affine_scale_and_shift(disp_eq, camera_height=camera_height)
     except CalibrationError as exc:
         print(f"[!] {view_id}: calibration FAILED - {exc}")
         summary = {
@@ -491,7 +513,7 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
         return summary
     
     # Step 3: Calibrated unprojection
-    points, colors = unproject_calibrated(rgb_eq, disp_eq, s, t, camera_height=1.50, max_dist=10.0, heading_deg=heading_deg)
+    points, colors = unproject_calibrated(rgb_eq, disp_eq, s, t, camera_height=camera_height, max_dist=10.0, heading_deg=heading_deg)
     
     # Step 4: Export PLY
     ply_path = os.path.join(output_dir, f"{view_id}_calibrated_cloud.ply")
@@ -534,8 +556,12 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
         "status": "ok" if reliable else "low_confidence",
         "calibration": {
             "slope_s": s, "shift_t": t, "r_squared": r2,
-            "camera_height_m": 1.50,
+            "camera_height_m": camera_height,
             "camera_height_assumed": True,
+            "camera_height_source": (
+                "estimate reconciled from the ceiling probe and the stereo scale-free "
+                "shape ratio; see DEFAULT_CAMERA_HEIGHT_M"
+            ),
             "ceiling_probe_m": round(ceiling_m, 2),
             "ceiling_probe_note": (
                 "Observed ceiling height at this assumed camera height. If it disagrees "
@@ -564,6 +590,9 @@ def main():
     parser = argparse.ArgumentParser(description="Calibrated Reality-Capture Pipeline")
     parser.add_argument("--view", default="view-01", help="view_id to process")
     parser.add_argument("--all", action="store_true", help="process every view in the manifest")
+    parser.add_argument("--camera-height", type=float, default=DEFAULT_CAMERA_HEIGHT_M,
+                        help=f"capture rig height in metres (default {DEFAULT_CAMERA_HEIGHT_M}); "
+                             "sets absolute scale for every output")
     args = parser.parse_args()
     
     manifest_path = "source/captures/panoramas/tour-manifest.json"
@@ -592,7 +621,7 @@ def main():
         img_path = os.path.join("source/captures/panoramas", v_info['file'])
         heading = v_info.get('heading', 0.0)
         out_dir = f"exports/spatial/{vid}_calibrated"
-        process_view(vid, img_path, heading, pipe, out_dir)
+        process_view(vid, img_path, heading, pipe, out_dir, camera_height=args.camera_height)
 
 
 if __name__ == "__main__":

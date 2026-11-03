@@ -28,6 +28,9 @@ cal = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(cal)
 
 H, W = 512, 1024
+# Synthetic fixtures build their ground truth at this height, so it is pinned here
+# rather than tracking DEFAULT_CAMERA_HEIGHT_M: the test must stay self-consistent
+# whatever scale the pipeline currently assumes.
 CAM_H = 1.50
 
 
@@ -121,13 +124,15 @@ def test_stored_artifacts_are_valid():
         if im.ndim == 3:
             im = im[..., 0]
         try:
-            s, t, _ = cal.calibrate_affine_scale_and_shift(im.astype(np.float32) / 255.0, CAM_H)
+            h = cal.DEFAULT_CAMERA_HEIGHT_M
+            s, t, _ = cal.calibrate_affine_scale_and_shift(im.astype(np.float32) / 255.0, h)
         except cal.CalibrationError:
             rejected += 1          # an honest refusal is a valid outcome
             continue
         assert s > 0, f"{m.parent.name}: negative slope {s}"
         assert t > 0, f"{m.parent.name}: non-positive shift {t}"
-        assert 1.0 / t <= cal.MAX_PLAUSIBLE_RANGE_M, f"{m.parent.name}: divergent far field"
+        assert 1.0 / t <= cal.MAX_RANGE_IN_CAMERA_HEIGHTS * h, \
+            f"{m.parent.name}: divergent far field"
         fitted += 1
     assert fitted > 0, "no stored map calibrated successfully"
     print(f"  PASS {fitted} stored maps fit physically, {rejected} honestly rejected")

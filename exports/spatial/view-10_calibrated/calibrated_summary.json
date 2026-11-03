@@ -1,25 +1,8 @@
 {
   "view_id": "view-10",
   "heading_deg": 51.31,
-  "status": "ok",
-  "calibration": {
-    "slope_s": 0.37097255160233134,
-    "shift_t": 0.301861645960873,
-    "r_squared": 0.9536860756529059,
-    "camera_height_m": 1.5,
-    "camera_height_assumed": true,
-    "ceiling_probe_m": 3.45,
-    "ceiling_probe_note": "Observed ceiling height at this assumed camera height. If it disagrees with the real storey height, every dimension is off by the same ratio."
-  },
-  "measured_dimensions": {
-    "x_min": -2.40840220451355,
-    "x_max": 1.8350725173950195,
-    "width_m": 4.24,
-    "z_min": -1.8935413360595703,
-    "z_max": 2.3954076766967773,
-    "length_m": 4.29,
-    "area_m2": 18.19,
-    "is_lower_bound": true,
-    "note": "Single-viewpoint line-of-sight span; occluded extents not captured."
-  }
+  "status": "failed",
+  "reason": "far-field range 1/t = 45.4 m exceeds 9.0 m (8 camera heights); extent would be set by the distance cull, not by walls",
+  "calibration": null,
+  "measured_dimensions": null
 }

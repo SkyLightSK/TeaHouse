@@ -1,8 +1,26 @@
 {
   "view_id": "view-06",
   "heading_deg": 53.43,
-  "status": "failed",
-  "reason": "refit shift t=-0.0067 <= 0; implies infinite/negative far-field range",
-  "calibration": null,
-  "measured_dimensions": null
+  "status": "ok",
+  "calibration": {
+    "slope_s": 0.8253389905793735,
+    "shift_t": 0.17431538854696677,
+    "r_squared": 0.9713210882301792,
+    "camera_height_m": 1.12,
+    "camera_height_assumed": true,
+    "camera_height_source": "estimate reconciled from the ceiling probe and the stereo scale-free shape ratio; see DEFAULT_CAMERA_HEIGHT_M",
+    "ceiling_probe_m": 3.33,
+    "ceiling_probe_note": "Observed ceiling height at this assumed camera height. If it disagrees with the real storey height, every dimension is off by the same ratio."
+  },
+  "measured_dimensions": {
+    "x_min": -2.308408737182617,
+    "x_max": 1.4000942707061768,
+    "width_m": 3.71,
+    "z_min": -1.9107921123504639,
+    "z_max": 1.4251489639282227,
+    "length_m": 3.34,
+    "area_m2": 12.39,
+    "is_lower_bound": true,
+    "note": "Single-viewpoint line-of-sight span; occluded extents not captured."
+  }
 }

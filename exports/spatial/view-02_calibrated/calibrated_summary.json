@@ -2,7 +2,7 @@
   "view_id": "view-02",
   "heading_deg": 226.24,
   "status": "failed",
-  "reason": "far-field range 1/t = 15.4 m exceeds 12 m; extent would be set by the distance cull, not by walls",
+  "reason": "far-field range 1/t = 16.7 m exceeds 9.0 m (8 camera heights); extent would be set by the distance cull, not by walls",
   "calibration": null,
   "measured_dimensions": null
 }

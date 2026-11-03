@@ -1,41 +1,30 @@
 {
   "total_rooms": 9,
-  "rooms_calibrated": 8,
-  "rooms_hand_estimated": 1,
+  "rooms_calibrated": 6,
+  "rooms_hand_estimated": 3,
   "all_dimensions_measured": false,
-  "warning": "Rooms with provenance.source == 'hand_estimate' are NOT measured. Calibrated rooms are single-viewpoint lower bounds, not survey dimensions.",
+  "warning": "Rooms with provenance.source == 'hand_estimate' are NOT measured. Rooms marked 'calibrated' are RANGE-SATURATED LOWER BOUNDS from single monocular viewpoints, not room sizes: the span reflects the depth model's ~4-5 m usable range, not the walls. Do not cite either as a dimension. See docs/MEASUREMENT-STATUS.md.",
+  "monocular_can_size_rooms": false,
   "wall_thickness_m": 0.2,
   "wall_thickness_measured": false,
   "rooms": [
     {
       "code": "TR",
       "provenance": {
-        "source": "calibrated",
-        "views": [
-          "view-01"
-        ],
-        "driving_view": "view-01",
-        "per_view_spans": [
-          {
-            "view": "view-01",
-            "width_m": 5.36,
-            "length_m": 6.43
-          }
-        ],
-        "r_squared": 0.968,
-        "is_lower_bound": true,
-        "placement_validated": false
+        "source": "hand_estimate",
+        "views": [],
+        "r_squared": null
       },
       "name": "Tearoom",
       "floor_level_m": 0.0,
-      "width_m": 5.36,
-      "length_m": 6.42,
-      "area_m2": 34.41,
+      "width_m": 3.8,
+      "length_m": 5.4,
+      "area_m2": 20.52,
       "bounds": {
-        "x_min": -2.68,
-        "x_max": 2.68,
-        "z_min": -3.21,
-        "z_max": 3.21
+        "x_min": -1.8,
+        "x_max": 2.0,
+        "z_min": -1.2,
+        "z_max": 4.2
       }
     },
     {
@@ -68,24 +57,24 @@
         "per_view_spans": [
           {
             "view": "view-05",
-            "width_m": 5.13,
-            "length_m": 4.2
+            "width_m": 3.65,
+            "length_m": 3.35
           }
         ],
-        "r_squared": 0.957,
+        "r_squared": 0.973,
         "is_lower_bound": true,
         "placement_validated": false
       },
       "name": "Pre-Bar Vestibule",
       "floor_level_m": 0.0,
-      "width_m": 5.14,
-      "length_m": 4.2,
-      "area_m2": 21.59,
+      "width_m": 3.66,
+      "length_m": 3.36,
+      "area_m2": 12.3,
       "bounds": {
-        "x_min": -2.57,
-        "x_max": 2.57,
-        "z_min": -2.1,
-        "z_max": 2.1
+        "x_min": -1.83,
+        "x_max": 1.83,
+        "z_min": -1.68,
+        "z_max": 1.68
       }
     },
     {
@@ -93,42 +82,42 @@
       "provenance": {
         "source": "calibrated",
         "views": [
+          "view-06",
           "view-08",
-          "view-09",
-          "view-10"
+          "view-09"
         ],
-        "driving_view": "view-10",
+        "driving_view": "view-06",
         "per_view_spans": [
           {
+            "view": "view-06",
+            "width_m": 3.71,
+            "length_m": 3.34
+          },
+          {
             "view": "view-08",
-            "width_m": 3.86,
-            "length_m": 3.58
+            "width_m": 2.8,
+            "length_m": 2.68
           },
           {
             "view": "view-09",
-            "width_m": 3.78,
-            "length_m": 4.19
-          },
-          {
-            "view": "view-10",
-            "width_m": 4.24,
-            "length_m": 4.29
+            "width_m": 2.71,
+            "length_m": 2.98
           }
         ],
-        "r_squared": 0.954,
+        "r_squared": 0.971,
         "is_lower_bound": true,
         "placement_validated": false
       },
       "name": "Accessories Shop",
       "floor_level_m": 0.15,
-      "width_m": 4.24,
-      "length_m": 4.28,
-      "area_m2": 18.15,
+      "width_m": 3.7,
+      "length_m": 3.34,
+      "area_m2": 12.36,
       "bounds": {
-        "x_min": -2.12,
-        "x_max": 2.12,
-        "z_min": -2.14,
-        "z_max": 2.14
+        "x_min": -1.85,
+        "x_max": 1.85,
+        "z_min": -1.67,
+        "z_max": 1.67
       }
     },
     {
@@ -139,33 +128,33 @@
           "view-11",
           "view-12"
         ],
-        "driving_view": "view-12",
+        "driving_view": "view-11",
         "per_view_spans": [
           {
             "view": "view-11",
-            "width_m": 3.34,
-            "length_m": 3.85
+            "width_m": 4.15,
+            "length_m": 4.35
           },
           {
             "view": "view-12",
-            "width_m": 3.42,
-            "length_m": 3.91
+            "width_m": 2.72,
+            "length_m": 3.19
           }
         ],
-        "r_squared": 0.87,
+        "r_squared": 0.982,
         "is_lower_bound": true,
         "placement_validated": false
       },
       "name": "Lower Corridor",
       "floor_level_m": -0.3,
-      "width_m": 3.42,
-      "length_m": 3.9,
-      "area_m2": 13.34,
+      "width_m": 4.16,
+      "length_m": 4.34,
+      "area_m2": 18.05,
       "bounds": {
-        "x_min": -1.71,
-        "x_max": 1.71,
-        "z_min": -1.95,
-        "z_max": 1.95
+        "x_min": -2.08,
+        "x_max": 2.08,
+        "z_min": -2.17,
+        "z_max": 2.17
       }
     },
     {
@@ -179,24 +168,24 @@
         "per_view_spans": [
           {
             "view": "view-14",
-            "width_m": 5.56,
-            "length_m": 6.56
+            "width_m": 4.28,
+            "length_m": 5.23
           }
         ],
-        "r_squared": 0.967,
+        "r_squared": 0.976,
         "is_lower_bound": true,
         "placement_validated": false
       },
       "name": "Entrance Lobby",
       "floor_level_m": 0.0,
-      "width_m": 5.56,
-      "length_m": 6.56,
-      "area_m2": 36.47,
+      "width_m": 4.28,
+      "length_m": 5.22,
+      "area_m2": 22.34,
       "bounds": {
-        "x_min": -2.78,
-        "x_max": 2.78,
-        "z_min": -3.28,
-        "z_max": 3.28
+        "x_min": -2.14,
+        "x_max": 2.14,
+        "z_min": -2.61,
+        "z_max": 2.61
       }
     },
     {
@@ -211,29 +200,29 @@
         "per_view_spans": [
           {
             "view": "view-15",
-            "width_m": 3.96,
-            "length_m": 4.24
+            "width_m": 2.81,
+            "length_m": 3.14
           },
           {
             "view": "view-17",
-            "width_m": 3.86,
-            "length_m": 4.09
+            "width_m": 2.71,
+            "length_m": 3.03
           }
         ],
-        "r_squared": 0.936,
+        "r_squared": 0.967,
         "is_lower_bound": true,
         "placement_validated": false
       },
       "name": "Stair Passage",
       "floor_level_m": 0.5,
-      "width_m": 3.96,
-      "length_m": 4.24,
-      "area_m2": 16.79,
+      "width_m": 2.82,
+      "length_m": 3.14,
+      "area_m2": 8.85,
       "bounds": {
-        "x_min": -1.98,
-        "x_max": 1.98,
-        "z_min": -2.12,
-        "z_max": 2.12
+        "x_min": -1.41,
+        "x_max": 1.41,
+        "z_min": -1.57,
+        "z_max": 1.57
       }
     },
     {
@@ -249,65 +238,53 @@
         "per_view_spans": [
           {
             "view": "view-16",
-            "width_m": 5.42,
-            "length_m": 4.35
+            "width_m": 4.27,
+            "length_m": 3.32
           },
           {
             "view": "view-20",
-            "width_m": 4.01,
-            "length_m": 6.85
+            "width_m": 3.71,
+            "length_m": 5.19
           },
           {
             "view": "view-21",
-            "width_m": 5.03,
-            "length_m": 5.77
-          }
-        ],
-        "r_squared": 0.971,
-        "is_lower_bound": true,
-        "placement_validated": false
-      },
-      "name": "Bookshop Hall",
-      "floor_level_m": 0.0,
-      "width_m": 5.04,
-      "length_m": 5.78,
-      "area_m2": 29.13,
-      "bounds": {
-        "x_min": -2.52,
-        "x_max": 2.52,
-        "z_min": -2.89,
-        "z_max": 2.89
-      }
-    },
-    {
-      "code": "LH",
-      "provenance": {
-        "source": "calibrated",
-        "views": [
-          "view-22"
-        ],
-        "driving_view": "view-22",
-        "per_view_spans": [
-          {
-            "view": "view-22",
-            "width_m": 4.9,
-            "length_m": 6.11
+            "width_m": 5.04,
+            "length_m": 4.69
           }
         ],
         "r_squared": 0.978,
         "is_lower_bound": true,
         "placement_validated": false
       },
+      "name": "Bookshop Hall",
+      "floor_level_m": 0.0,
+      "width_m": 5.04,
+      "length_m": 4.7,
+      "area_m2": 23.69,
+      "bounds": {
+        "x_min": -2.52,
+        "x_max": 2.52,
+        "z_min": -2.35,
+        "z_max": 2.35
+      }
+    },
+    {
+      "code": "LH",
+      "provenance": {
+        "source": "hand_estimate",
+        "views": [],
+        "r_squared": null
+      },
       "name": "Lecture Hall Entrance",
       "floor_level_m": 0.0,
-      "width_m": 4.9,
-      "length_m": 6.1,
-      "area_m2": 29.89,
+      "width_m": 4.8,
+      "length_m": 4.2,
+      "area_m2": 20.16,
       "bounds": {
-        "x_min": -2.45,
-        "x_max": 2.45,
-        "z_min": -3.05,
-        "z_max": 3.05
+        "x_min": -24.8,
+        "x_max": -20.0,
+        "z_min": 9.8,
+        "z_max": 14.0
       }
     }
   ],

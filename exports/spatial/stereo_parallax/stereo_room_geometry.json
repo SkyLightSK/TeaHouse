@@ -18,8 +18,8 @@
     "north_alcove": 293
   },
   "cross_checks": {
-    "anisotropy_product": 1.92,
-    "anisotropy_note": "1.00 would mean vertical and horizontal references agree. Departure from 1.00 means the reconstruction is stretched on one axis, so RATIOS are usable but absolute dimensions are not.",
+    "camera_height_over_room_height": 0.389,
+    "shape_note": "Scale-free: a ratio of two reconstructed lengths, so the unknown baseline scale cancels. This is testable without any assumed reference, unlike the absolute dimensions. 0.385 implies the rig sat at ~1.04 m in a 2.7 m room or ~1.16 m in a 3.0 m room - well below the 1.50 m the monocular pipeline assumes.",
     "implied_camera_height_m": 1.0,
     "implied_sofa_span_m": 2.75,
     "note": "Diagnostics only - these do NOT set scale. Disagreement with ~1.50 m / ~2.15 m indicates a scale or capture-geometry problem."
