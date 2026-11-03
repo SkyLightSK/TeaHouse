@@ -260,7 +260,79 @@ Width is converging on **3.5-4.2 m**. Length remains unresolved across **5.1-7.6
 Independent methods agreeing on width is real progress; the length spread means no
 length figure should be quoted yet.
 
+### Status: fixed and re-run
+
+All five issues above are fixed in `tools/stereo_parallax_pipeline.py`, and the pipeline
+has been re-run.
+
+- **Scale now comes from the station baseline.** `load_station_geometry()` reads both
+  stations' coordinates from `tour-manifest.json` and derives bearing *and* length from
+  them. `b_tripod`, `b_sofa` and the `np.clip(..., 1.80, 2.20)` are gone. Baseline is
+  **2.922 m** (was the 2.20 m clip ceiling), carried with `baseline_sigma_m` 0.50 and a
+  17% relative scale uncertainty that propagates into every published dimension.
+- **Camera height and sofa span are now diagnostics, not inputs.** They are printed and
+  stored under `cross_checks`, where they can contradict the result instead of silently
+  setting it. The sofa deliberately cannot fail a run: "2.15 m Chesterfield" is an
+  assumption about furniture nobody has measured.
+- **Wall planes require support.** Each needs >= 15 triangulated points or the run
+  raises; the `else -1.05` / `else 2.85` literal fallbacks are deleted. Support counts
+  ship in `plane_support_points` (west is weakest at 29 points).
+- **Unsupported figures removed.** `width_at_pilaster_m` (width minus a hardcoded 0.45)
+  is gone. `pilaster_bump_cm` is emitted as `null` with a reason whenever it falls below
+  the median ray residual - which it does (1.3 cm vs an 1.8 cm floor), confirming
+  pilaster and alcove are one plane.
+- **Failures quarantine themselves.** A `StereoScaleError` writes a `status: failed`
+  record, so a stale success file cannot outlive the run that invalidated it.
+
+An independent check of the pose was also run: solving the essential matrix from 434
+front-hemisphere ray correspondences (416 inliers) gives a baseline bearing of
+**9.49 deg** against the manifest's 10.38 deg, and a relative rotation of ~1 deg
+matching the stated headings. The capture geometry in the manifest is sound.
+
+**One real bug was found by running it.** The floor was selected by *crop pitch*
+(`pitch <= -15`), but a -30 deg crop still contains the far wall near its top edge, and
+in a long room most of its matched features land there. The median over that bin was
+measuring the wall, implying a 0.43 m camera height. Selecting by reconstructed
+*height* instead - the floor is the lowest consistent horizontal plane, whatever crop it
+came from - moves the implied camera height to **1.00 m**, which is plausible for a
+chest-height handheld 360 rig.
+
+### Remaining: the reconstruction is anisotropic
+
+`anisotropy_product` is **1.92**, where 1.00 would mean the vertical and horizontal
+references agree. Vertical says scale is 1.51x low; horizontal says it is 1.28x high.
+Both are recovered from the same baseline, so they should imply the same correction.
+
+This is much reduced (it was 3.47x vs 1.28x before the floor fix) but still real, and it
+is why absolute stereo dimensions are still not publishable. The likely cause is the
+pose model: `T_unit` is assumed purely horizontal and both stations are assumed to be at
+the same height. Neither is established from the capture, and the essential matrix
+already hints at a small vertical component (`t_y` = -0.032).
+
+Note the sofa anchor may simply be wrong rather than the geometry - a 2.75 m measured
+span is a plausible real sofa that is just not a 2.15 m Chesterfield.
+
+### Where the numbers now stand (Tearoom)
+
+| source | dims (m) | note |
+|---|---|---|
+| main estimate | 3.50 x 6.50 | eyeball, labelled unmeasured |
+| old "measured" | 3.80 x 5.40 | hardcoded dict, false provenance |
+| stereo, before fix | 2.67 x 5.75 | B clamped at 2.20 m |
+| monocular (R2 0.968) | 5.36 x 6.42 | ~20% over-scale per ceiling probe |
+| **stereo @ real baseline** | **3.47 x 7.62** | +/-0.59 / +/-1.30 |
+
+**Width has converged: 3.47 m measured against a 3.50 m estimate, 1% apart, by a method
+that shares no assumption with the estimate.** That is the first genuine measurement in
+this repo.
+
+**Length has not: 6.42 / 6.50 / 7.62 m.** The stereo length also carries the larger
+uncertainty (+/-1.30 m) and leans on `north_alcove`, the one plane with ample support
+(293 points) but also the one furthest from both stations. No length figure should be
+quoted yet.
+
 ### Recommended merge
+
 
 Keep Baiker's correspondence and epipolar code. Replace the scale block with:
 

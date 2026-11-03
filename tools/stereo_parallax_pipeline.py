@@ -14,6 +14,65 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
+GPS_SIGMA_M = 0.50  # consumer GPS scatter indoors; carried through, never hidden
+
+
+class StereoScaleError(RuntimeError):
+    """Raised when metric scale cannot be derived honestly from the capture geometry."""
+
+
+def load_station_geometry(manifest_path, view_a, view_b):
+    """
+    Derive the stereo baseline from the capture manifest.
+
+    Returns (heading_a, heading_b, bearing_deg, baseline_m).
+
+    The baseline between two real camera positions is the ONLY scale source here that
+    does not assume something about the scene. The previous implementation took the
+    translation DIRECTION from GPS (link_ang = 10.38 deg) but then recovered its LENGTH
+    from an assumed 1.50 m camera height and an assumed 2.15 m sofa, averaged them, and
+    clipped the result to [1.80, 2.20] - publishing the clip ceiling as a measurement.
+    Direction and length come from the same two coordinates; use both.
+    """
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
+    views = {v["view_id"]: v for v in manifest["views"]}
+    for vid in (view_a, view_b):
+        if vid not in views:
+            raise StereoScaleError(f"{vid} not in manifest")
+    a, b = views[view_a], views[view_b]
+    for v, vid in ((a, view_a), (b, view_b)):
+        if v.get("lat") is None or v.get("lng") is None:
+            raise StereoScaleError(f"{vid} has no GPS position; cannot derive baseline")
+
+    R_EARTH = 6371000.0
+    la1, lo1, la2, lo2 = map(np.radians, [a["lat"], a["lng"], b["lat"], b["lng"]])
+    dlat, dlon = la2 - la1, lo2 - lo1
+    hav = np.sin(dlat / 2) ** 2 + np.cos(la1) * np.cos(la2) * np.sin(dlon / 2) ** 2
+    baseline_m = float(2 * R_EARTH * np.arcsin(np.sqrt(hav)))
+
+    y = np.sin(dlon) * np.cos(la2)
+    x = np.cos(la1) * np.sin(la2) - np.sin(la1) * np.cos(la2) * np.cos(dlon)
+    bearing = float((np.degrees(np.arctan2(y, x)) + 360.0) % 360.0)
+
+    # A baseline must be large enough that triangulation is conditioned, and small
+    # enough that the two stations still share a room. Fail loudly outside that.
+    if baseline_m < 0.5:
+        raise StereoScaleError(
+            f"baseline {baseline_m:.2f} m is too short to triangulate reliably"
+        )
+    if baseline_m > 15.0:
+        raise StereoScaleError(
+            f"baseline {baseline_m:.2f} m is implausible for two stations in one room"
+        )
+    if baseline_m < 3.0 * GPS_SIGMA_M:
+        print(f"[!] WARNING: baseline {baseline_m:.2f} m is close to GPS noise "
+              f"(sigma={GPS_SIGMA_M} m); scale uncertainty is "
+              f"+/-{100.0 * GPS_SIGMA_M / baseline_m:.0f}%.")
+
+    return float(a.get("heading", 0.0)), float(b.get("heading", 0.0)), bearing, baseline_m
+
+
 def extract_pinhole_crop(pano, yaw_deg, pitch_deg, fov_deg=80.0, width=1024, height=1024):
     """Extract a rectilinear pinhole crop from equirectangular panorama."""
     H, W = pano.shape[:2]
@@ -90,10 +149,13 @@ def main():
     pano1 = cv2.imread(p1_path)
     pano3 = cv2.imread(p3_path)
     
-    h1 = 141.27
-    h3 = 142.51
-    link_ang = np.radians(10.38)
+    manifest_path = "source/captures/panoramas/tour-manifest.json"
+    h1, h3, bearing_deg, BASELINE_M = load_station_geometry(manifest_path, "view-01", "view-03")
+    link_ang = np.radians(bearing_deg)
     T_unit = np.array([np.sin(link_ang), 0.0, np.cos(link_ang)])
+    print(f"[+] Station geometry from manifest: headings {h1:.2f}/{h3:.2f} deg, "
+          f"bearing {bearing_deg:.2f} deg, baseline {BASELINE_M:.2f} m "
+          f"(+/-{GPS_SIGMA_M:.2f} m GPS)")
     
     sift = cv2.SIFT_create(nfeatures=3000)
     matcher = cv2.BFMatcher(cv2.NORM_L2)
@@ -199,32 +261,97 @@ def main():
     pts_unit = np.array(all_pts_3d)
     print(f"[+] Total triangulated landmark points: {len(pts_unit)}")
     
-    # Scale determination:
-    # 1. Floor elevation in unit baseline
-    floor_pts = [p for p, m in zip(pts_unit, metadata) if m["pitch"] <= -15.0 and p[1] < -0.1]
-    if len(floor_pts) > 10:
-        y_floor_u = np.median([p[1] for p in floor_pts])
-        b_tripod = 1.50 / abs(y_floor_u)
-    else:
-        b_tripod = 1.95
-        
-    # Standard 3-seater Chesterfield sofa width anchor (2.15m)
-    sofa_pts_u = [p for p, m in zip(pts_unit, metadata) if m["yaw"] == 0 and m["pitch"] == 0.0]
-    if len(sofa_pts_u) > 20:
-        sofa_xs = [p[0] for p in sofa_pts_u]
-        sofa_span_u = np.percentile(sofa_xs, 95) - np.percentile(sofa_xs, 5)
-        b_sofa = 2.15 / sofa_span_u
-    else:
-        b_sofa = 2.00
-        
-    # Reconciled baseline: Weighted average between tripod elevation and sofa physical gauge
-    B_metric = 0.5 * (b_tripod + b_sofa)
-    # Clamp to reasonable physical bounds
-    B_metric = np.clip(B_metric, 1.80, 2.20)
-    print(f"[+] Physical Camera Baseline: {B_metric:.3f} meters (Tripod: {b_tripod:.2f}m, Sofa: {b_sofa:.2f}m)")
-    
+    # ------------------------------------------------------------------
+    # Metric scale.
+    #
+    # Triangulation is done in units of the baseline, so multiplying by the baseline
+    # in metres yields metres. That is the whole point of stereo: scale comes from the
+    # distance between two real camera positions and needs NO assumption about the
+    # scene, the tripod, or the furniture.
+    #
+    # The previous implementation did the opposite. It recovered scale from an assumed
+    # 1.50 m camera height (b_tripod) averaged with an assumed 2.15 m sofa width
+    # (b_sofa), then clipped the result into [1.80, 2.20]. The published
+    # baseline_meters of exactly 2.20 was the clip CEILING - the estimate had exceeded
+    # the bound and was silently truncated. That reintroduced the very camera-height
+    # assumption stereo exists to eliminate, and the manifest had the real separation
+    # (2.92 m) all along.
+    # ------------------------------------------------------------------
+    B_metric = BASELINE_M
+    scale_rel_sigma = GPS_SIGMA_M / BASELINE_M
+    print(f"[+] Metric scale from station baseline: {B_metric:.3f} m "
+          f"(+/-{scale_rel_sigma * 100:.0f}% from GPS)")
+
     # Scale points to meters
     pts_m = pts_unit * B_metric
+
+    # Independent cross-checks. These do NOT set scale; they test it. If the floor and
+    # the sofa disagree with the baseline, that is evidence worth seeing, not an input
+    # to average in.
+    # Floor estimate. Selecting on the crop's pitch bin does not work: a -30 deg crop
+    # still contains the far wall near its top edge, and in a long room most of its
+    # matched features land there rather than on the floor underfoot. Taking a median
+    # over that bin therefore measures the wall, not the floor, and previously implied a
+    # 0.43 m camera height. Select on reconstructed HEIGHT instead - the floor is the
+    # lowest consistent horizontal plane in the cloud, whatever crop it came from.
+    y_all = pts_m[:, 1]
+    floor_level = float(np.percentile(y_all, 2.0))
+    near_floor = pts_m[np.abs(y_all - floor_level) < 0.15]
+    implied_cam_height = (float(abs(np.median(near_floor[:, 1])))
+                          if len(near_floor) >= 10 else None)
+    sofa_pts = [q for q, m in zip(pts_m, metadata) if m["yaw"] == 0 and m["pitch"] == 0.0]
+    if len(sofa_pts) > 20:
+        sofa_xs = [q[0] for q in sofa_pts]
+        implied_sofa_span = float(np.percentile(sofa_xs, 95) - np.percentile(sofa_xs, 5))
+    else:
+        implied_sofa_span = None
+    if implied_cam_height is not None:
+        print(f"[i] CROSS-CHECK implied camera height: {implied_cam_height:.2f} m "
+              f"(assumed elsewhere in this repo: 1.50 m)")
+    if implied_sofa_span is not None:
+        print(f"[i] CROSS-CHECK implied sofa span: {implied_sofa_span:.2f} m "
+              f"(a 3-seater Chesterfield is ~2.15 m)")
+
+    # The cross-checks are only useful if they can fail the run. A plausible camera
+    # height is 1.0-1.8 m for any handheld or tripod 360 capture; outside that the
+    # reconstruction is not merely mis-scaled but geometrically wrong, and publishing
+    # room dimensions from it would repeat the original defect in a new form.
+    #
+    # A pure scale error moves both diagnostics the same way. When they move in
+    # OPPOSITE directions - floor too low while horizontal spans run wide - the
+    # reconstruction is anisotropic, which points at the pose model rather than at
+    # scale: T_unit is assumed purely horizontal (Y = 0) and both stations are assumed
+    # to be at the same height. Neither is established from the capture.
+    # Gate on camera height only. A 360 rig sits somewhere between a low tripod and
+    # eye level; outside 0.9-1.9 m the reconstruction is geometrically wrong, not just
+    # mis-scaled. The sofa is deliberately NOT a gate: "2.15 m Chesterfield" is an
+    # assumption about a piece of furniture nobody has measured, and it must not be
+    # able to fail a run or to set scale. It stays a printed diagnostic.
+    CAM_H_MIN, CAM_H_MAX = 0.90, 1.90
+    if implied_cam_height is None:
+        raise StereoScaleError(
+            "no floor plane recovered; cannot verify scale for this pair"
+        )
+    if not (CAM_H_MIN <= implied_cam_height <= CAM_H_MAX):
+        raise StereoScaleError(
+            f"implied camera height {implied_cam_height:.2f} m is outside "
+            f"{CAM_H_MIN}-{CAM_H_MAX} m, so the reconstruction is geometrically wrong "
+            "(pose model assumes horizontal-only translation and equal station "
+            "heights). Dimensions from this pair are NOT publishable."
+        )
+
+    # Residual anisotropy check. Vertical and horizontal scale are recovered by the
+    # same baseline, so an independent vertical reference and an independent horizontal
+    # reference should imply the SAME correction. When they disagree the geometry is
+    # stretched along one axis and only ratios survive, not absolute sizes.
+    anisotropy = None
+    if implied_sofa_span:
+        vertical_corr = 1.50 / implied_cam_height
+        horizontal_corr = implied_sofa_span / 2.15
+        anisotropy = float(vertical_corr * horizontal_corr)  # 1.0 == consistent
+        print(f"[i] CROSS-CHECK anisotropy: vertical x{vertical_corr:.2f} vs "
+              f"horizontal x{horizontal_corr:.2f} (product {anisotropy:.2f}; "
+              "1.00 would be isotropic)")
     
     # Calculate architectural wall planes
     west_pts = [p[0] for p, m in zip(pts_m, metadata) if m["yaw"] in [225, 270, 315] and p[0] < -0.2]
@@ -238,12 +365,28 @@ def main():
     
     south_pts = [p[2] for p, m in zip(pts_m, metadata) if m["yaw"] in [135, 180, 225] and p[2] < 0.0]
     
-    x_west = np.percentile(west_pts, 10) if west_pts else -1.05
-    x_east = np.percentile(east_pts, 90) if east_pts else 2.85
-    
-    z_south = np.percentile(south_pts, 10) if south_pts else -1.10
-    z_pilaster = np.median(north_pilaster) if north_pilaster else 3.15
-    z_alcove = np.percentile(north_alcove, 90) if north_alcove else 4.15
+    # A wall plane needs enough triangulated support to be a measurement rather than a
+    # guess. The previous code substituted a hardcoded literal (else -1.05, else 2.85,
+    # ...) whenever a direction produced no points, so an unmeasured wall silently
+    # became a published coordinate. A direction with no support is a MISSING
+    # measurement; say so instead.
+    MIN_PLANE_PTS = 15
+
+    def plane(points, reducer, label):
+        if len(points) < MIN_PLANE_PTS:
+            raise StereoScaleError(
+                f"{label}: only {len(points)} triangulated points "
+                f"(need {MIN_PLANE_PTS}); this wall is NOT measured by this pair"
+            )
+        return float(reducer(points)), len(points)
+
+    x_west, n_west = plane(west_pts, lambda a: np.percentile(a, 10), "West wall")
+    x_east, n_east = plane(east_pts, lambda a: np.percentile(a, 90), "East wall")
+    z_south, n_south = plane(south_pts, lambda a: np.percentile(a, 10), "South wall")
+    z_pilaster, n_pil = plane(north_pilaster, np.median, "North pilaster")
+    z_alcove, n_alc = plane(north_alcove, lambda a: np.percentile(a, 90), "North alcove")
+    plane_support = {"west": n_west, "east": n_east, "south": n_south,
+                     "north_pilaster": n_pil, "north_alcove": n_alc}
     
     pilaster_depth = z_alcove - z_pilaster
     overall_width = x_east - x_west
@@ -259,17 +402,42 @@ def main():
     print(f"North Alcove (Sofa Wall)    : Z = {z_alcove:5.2f} m")
     print(f"\nPhysical Architectural Findings:")
     print(f"  Overall Room Width  : {overall_width:.2f} meters")
-    print(f"  Width at Wall Bump  : {overall_width - 0.45:.2f} meters")
+    print(f"  (width at wall bump removed: was width minus a hardcoded 0.45 m)")
     print(f"  Overall Room Length : {overall_length:.2f} meters")
     print(f"  Pilaster Bump Depth : {pilaster_depth * 100:.1f} cm (True 3D Step)")
     print(f"  Net Room Floor Area : {overall_width * overall_length - 0.45 * pilaster_depth:.2f} m²")
     
     # Save JSON summary
+    # Resolution floor of this method: the median ray-ray residual, in metres. Any
+    # reported feature smaller than this is indistinguishable from noise.
+    median_resid_units = float(np.median([m["ray_error_units"] for m in metadata]))
+    resolution_m = median_resid_units * B_metric
+    pilaster_reported = abs(pilaster_depth) > resolution_m
+
     summary = {
         "method": "Multi-View Epipolar Parallax Triangulation",
         "stations": ["view-01", "view-03"],
-        "baseline_meters": float(B_metric),
+        "scale_source": "station baseline from tour-manifest.json GPS coordinates",
+        "baseline_meters": round(float(B_metric), 3),
+        "baseline_sigma_m": GPS_SIGMA_M,
+        "scale_rel_uncertainty": round(float(scale_rel_sigma), 3),
         "total_triangulated_landmarks": len(pts_m),
+        "median_ray_residual_m": round(resolution_m, 4),
+        "plane_support_points": plane_support,
+        "cross_checks": {
+            "anisotropy_product": (round(anisotropy, 2) if anisotropy else None),
+            "anisotropy_note": (
+                "1.00 would mean vertical and horizontal references agree. Departure "
+                "from 1.00 means the reconstruction is stretched on one axis, so "
+                "RATIOS are usable but absolute dimensions are not."
+            ),
+            "implied_camera_height_m": (round(implied_cam_height, 2)
+                                        if implied_cam_height is not None else None),
+            "implied_sofa_span_m": (round(implied_sofa_span, 2)
+                                    if implied_sofa_span is not None else None),
+            "note": ("Diagnostics only - these do NOT set scale. Disagreement with "
+                     "~1.50 m / ~2.15 m indicates a scale or capture-geometry problem."),
+        },
         "measured_bounds": {
             "x_west": float(x_west),
             "x_east": float(x_east),
@@ -278,11 +446,25 @@ def main():
             "z_alcove": float(z_alcove)
         },
         "dimensions": {
-            "width_m": float(round(overall_width, 2)),
-            "width_at_pilaster_m": float(round(overall_width - 0.45, 2)),
-            "length_m": float(round(overall_length, 2)),
-            "pilaster_bump_cm": float(round(pilaster_depth * 100, 1)),
-            "net_area_m2": float(round(overall_width * overall_length - 0.45 * pilaster_depth, 2))
+            # Every figure here is traceable to triangulated points. width_at_pilaster_m
+            # was previously "width - 0.45" with 0.45 hardcoded, and is removed rather
+            # than republished as a measurement.
+            "width_m": round(float(overall_width), 2),
+            "length_m": round(float(overall_length), 2),
+            "area_m2": round(float(overall_width * overall_length), 2),
+            "width_uncertainty_m": round(float(overall_width * scale_rel_sigma), 2),
+            "length_uncertainty_m": round(float(overall_length * scale_rel_sigma), 2),
+            # Below the residual floor this is noise, so it is reported as null with the
+            # reason attached rather than as an 0.8 cm "architectural finding".
+            "pilaster_bump_cm": (round(float(pilaster_depth * 100), 1)
+                                 if pilaster_reported else None),
+            "pilaster_bump_note": (
+                None if pilaster_reported else
+                f"|{pilaster_depth * 100:.1f} cm| is below the {resolution_m * 100:.1f} cm "
+                "median ray residual; pilaster and alcove are the same plane within noise."
+            ),
+            "is_lower_bound": True,
+            "note": "Two-station line-of-sight extent; occluded surfaces not captured.",
         }
     }
     with open(os.path.join(out_dir, "stereo_room_geometry.json"), "w", encoding="utf-8") as f:
@@ -337,4 +519,22 @@ def main():
         print(f"[+] Saved SIFT Feature Match Visualization: {match_path}")
 
 if __name__ == "__main__":
-    main()
+    # A failed run must leave behind an explicit record of the failure, not a stale
+    # success file from a previous run that downstream consumers would keep trusting.
+    try:
+        main()
+    except StereoScaleError as exc:
+        out = "exports/spatial/stereo_parallax"
+        os.makedirs(out, exist_ok=True)
+        with open(os.path.join(out, "stereo_room_geometry.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "method": "Multi-View Epipolar Parallax Triangulation",
+                "stations": ["view-01", "view-03"],
+                "status": "failed",
+                "reason": str(exc),
+                "dimensions": None,
+                "measured_bounds": None,
+            }, f, indent=2)
+        print(f"\n[!] STEREO FAILED: {exc}", file=sys.stderr)
+        print(f"[!] Wrote failure record to {out}/stereo_room_geometry.json", file=sys.stderr)
+        sys.exit(1)
