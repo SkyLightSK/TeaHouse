@@ -16,6 +16,15 @@ def read_text(path):
         return f.read()
 
 def main():
+    banner = """
+    <div style="background:#7f1d1d;color:#fff;padding:14px 18px;border-radius:8px;margin:0 0 20px;font-weight:600;line-height:1.5">
+      &#9888;&#65039; NO SURVEYED DIMENSIONS ON THIS PAGE.
+      The depth pipeline that produced these figures used an inverted depth convention
+      (unphysical negative slopes, R&sup2; 0.04&ndash;0.56) and the room boxes were hand-entered,
+      never derived from it. Figures are retained for comparison only.
+      See <code>docs/MEASUREMENT-STATUS.md</code>.
+    </div>
+    """
     spatial_dir = "exports/spatial"
     out_html = os.path.join(spatial_dir, "index.html")
     venue_dir = os.path.join(spatial_dir, "venue")
@@ -23,7 +32,7 @@ def main():
     # Load summaries
     v1_sum = json.load(open(os.path.join(spatial_dir, "view-01/spatial_summary.json")))
     v2_sum = json.load(open(os.path.join(spatial_dir, "view-02/spatial_summary.json")))
-    venue_schedule = json.load(open(os.path.join(venue_dir, "measured_room_schedule.json")))
+    venue_schedule = json.load(open(os.path.join(venue_dir, "room_schedule.json")))
     
     # Read SVGs
     clean_svg = read_text(os.path.join(venue_dir, "clean_architectural_blueprint.svg"))
@@ -373,6 +382,7 @@ def main():
 </head>
 <body>
   <div class="container">
+  {banner}
     <header>
       <div>
         <span class="badge">AEC Reality-Capture Pipeline</span>
@@ -398,7 +408,7 @@ def main():
         <div class="metric-sub">True Outer Envelope (503.8 m²)</div>
       </div>
       <div class="metric-card">
-        <div class="metric-label">Indoor Rooms Measured</div>
+        <div class="metric-label">Indoor Rooms (hand-estimated, not measured)</div>
         <div class="metric-val">158.8 m²</div>
         <div class="metric-sub">Net Interior Area (9 Rooms)</div>
       </div>
@@ -530,7 +540,7 @@ def main():
             <a href="../../source/rooms/teahouse.blend" class="dl-btn" style="border-color: #f59e0b; color: #fbbf24;" download>🎨 Master Blender File (.blend)</a>
             <a href="venue/clean_architectural_blueprint.dxf" class="dl-btn" download>Clean CAD (DXF)</a>
             <a href="venue/clean_architectural_blueprint.svg" class="dl-btn" download>Clean SVG</a>
-            <a href="venue/measured_room_schedule.json" class="dl-btn" download>Measured Schedule (JSON)</a>
+            <a href="venue/room_schedule.json" class="dl-btn" download>Room Schedule (JSON)</a>
           </div>
         </div>
       </div>
@@ -540,7 +550,7 @@ def main():
     <div id="tab-schedule" class="tab-pane">
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Venue-Wide Calibration Resolution &bull; Historical Notes vs. Uncalibrated vs. Calibrated Ground Truth</span>
+          <span class="card-title">Room Dimension Comparison &bull; ALL figures are estimates &bull; see docs/MEASUREMENT-STATUS.md</span>
           <span style="font-size: 0.8rem; color: #10b981; font-family: monospace;">2-Parameter (s, t) RANSAC Ground Model</span>
         </div>
         <div class="card-body">
@@ -549,9 +559,9 @@ def main():
               <tr>
                 <th>Code</th>
                 <th>Space Name</th>
-                <th>Old Notes (10-20% approx)</th>
+                <th>Project Estimate (space-codes.json)</th>
                 <th>Uncalibrated Output (t=0 Inflated)</th>
-                <th>Calibrated Ground Truth (s, t)</th>
+                <th>Hand Estimate (NOT measured)</th>
                 <th>Reconstruction Verdict &amp; Proportions</th>
               </tr>
             </thead>

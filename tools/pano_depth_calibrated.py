@@ -37,6 +37,24 @@ import torch
 from transformers import pipeline
 
 
+# --- Calibration quality gates -------------------------------------------------
+# Minimum Pearson correlation between disparity and true inverse ground range.
+# Physically this must be strongly positive; anything near or below zero means the
+# disparity convention is wrong and no honest scale can be recovered.
+MIN_GROUND_CORRELATION = 0.30
+# RANSAC inlier band on 1/R (metres^-1) and iteration budget.
+RANSAC_INLIER_M = 0.03
+RANSAC_ITERS = 400
+# Views below this R-squared are emitted but flagged unreliable rather than published
+# as measurements.
+MIN_ACCEPTABLE_R2 = 0.60
+
+
+class CalibrationError(RuntimeError):
+    """Raised when a view cannot be honestly calibrated; the view is skipped, not guessed."""
+
+
+
 def equirect_to_cubemap_faces(equirect_img: np.ndarray, face_size: int = 768) -> list[np.ndarray]:
     """
     Convert an equirectangular image into 6 rectilinear cube faces.
@@ -174,16 +192,42 @@ def run_pinhole_cubemap_depth(orig_img: Image.Image, pipe, face_size: int = 768,
     faces_spherical_disp = []
     t0 = time.time()
     print("[*] Running Depth-Anything-V2 on 6 pinhole cube faces...")
+    raw_faces = []
     for idx, f_rgb in enumerate(faces_rgb):
         pil_face = Image.fromarray(f_rgb)
         res = pipe(pil_face)
-        d_persp = np.array(res['predicted_depth'], dtype=np.float32)
-        
-        # Normalize face disparity to [0, 1] relative scale
-        d_min, d_max = np.percentile(d_persp, 1), np.percentile(d_persp, 99)
-        d_norm = np.clip((d_persp - d_min) / max(d_max - d_min, 1e-4), 0.0, 1.0)
-        
-        # Convert from perspective inverse depth to spherical inverse depth: d_sph = d_persp * cos(ray)
+        raw_faces.append(np.array(res['predicted_depth'], dtype=np.float32))
+
+    # Depth-Anything-V2 emits RELATIVE INVERSE DEPTH (disparity): near surfaces read HIGH.
+    # Verify that per panorama rather than assuming it. The bottom cube face (index 5,
+    # nadir) sees the closest floor, so its centre must out-read the horizon band of the
+    # side faces. If it does not, the head emitted depth and we invert once here, before
+    # anything downstream consumes it.
+    nadir = raw_faces[5]
+    c0, c1 = int(face_size * 0.4), int(face_size * 0.6)
+    nadir_centre = float(np.median(nadir[c0:c1, c0:c1]))
+    side_horizon = float(np.median(np.concatenate([
+        raw_faces[f][c0:c1, :].ravel() for f in (0, 1, 2, 3)
+    ])))
+    if nadir_centre <= side_horizon:
+        print(f"[!] Model emitted DEPTH (nadir {nadir_centre:.3f} <= horizon {side_horizon:.3f}); inverting to disparity.")
+        raw_faces = [-f for f in raw_faces]
+    else:
+        print(f"[+] Model emitted DISPARITY (nadir {nadir_centre:.3f} > horizon {side_horizon:.3f}).")
+
+    # Normalize ONCE across all 6 faces on a shared scale. Per-face normalization (the
+    # previous behaviour) rescaled every face to its own [0,1] range, so a face staring
+    # at a near wall and a face down a long corridor both spanned 0..1. That destroys
+    # cross-face comparability and leaves no single global (s, t) that can fit the sphere.
+    stacked = np.concatenate([f.ravel() for f in raw_faces])
+    d_min, d_max = np.percentile(stacked, 1), np.percentile(stacked, 99)
+    scale = max(float(d_max - d_min), 1e-4)
+    print(f"[+] Shared cross-face disparity normalization: p1={d_min:.4f} p99={d_max:.4f}")
+
+    for d_persp in raw_faces:
+        d_norm = np.clip((d_persp - d_min) / scale, 0.0, 1.0)
+        # Perspective disparity -> spherical (radial) disparity.
+        # R = z / cos_ray, so 1/R = (1/z) * cos_ray, i.e. disp_sph = disp_persp * cos_ray.
         d_spherical = d_norm * cos_ray
         faces_spherical_disp.append(d_spherical)
         
@@ -212,7 +256,9 @@ def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float
     phi_2d = np.tile(phi[:, np.newaxis], (1, width))
     ry_2d = np.tile(ry[:, np.newaxis], (1, width))
     
-    # Ground floor cone: phi in [-75 deg, -30 deg]
+    # Ground floor cone: phi in [-75 deg, -30 deg].
+    # Excludes the nadir (tripod/photographer feet occlude it) and the horizon, where
+    # |sin(phi)| -> 0 makes R_true asymptotically sensitive to pixel noise.
     floor_mask = (phi_2d < np.radians(-30)) & (phi_2d > np.radians(-75))
     inv_R_true = np.abs(ry_2d[floor_mask]) / camera_height
     d_samples = disparity[floor_mask]
@@ -221,26 +267,72 @@ def calibrate_affine_scale_and_shift(disparity: np.ndarray, camera_height: float
     valid = (d_samples > 0.02) & np.isfinite(inv_R_true)
     x = d_samples[valid]
     y = inv_R_true[valid]
-    
-    # 2-parameter linear regression: y = s * x + t
-    # Subsample 50,000 points for speed if large
+
+    if len(x) < 1000:
+        raise CalibrationError(f"only {len(x)} usable floor rays; need >= 1000")
+
+    # Subsample for speed
+    rng = np.random.default_rng(12345)
     if len(x) > 50000:
-        idx = np.random.choice(len(x), 50000, replace=False)
+        idx = rng.choice(len(x), 50000, replace=False)
         x_sub, y_sub = x[idx], y[idx]
     else:
         x_sub, y_sub = x, y
-        
-    A = np.vstack([x_sub, np.ones_like(x_sub)]).T
-    s, t = np.linalg.lstsq(A, y_sub, rcond=None)[0]
-    
-    # Compute R-squared correlation
-    y_pred = s * x_sub + t
-    ss_res = np.sum((y_sub - y_pred) ** 2)
-    ss_tot = np.sum((y_sub - np.mean(y_sub)) ** 2)
+
+    # Physical sign check BEFORE fitting. Disparity is inverse depth: the steep-down
+    # floor rays (phi -> -75 deg) are the CLOSEST floor, so they carry both the highest
+    # 1/R_true and the highest disparity. Correlation must therefore be positive.
+    # A negative correlation means the disparity map is inverted (depth, not disparity)
+    # or the floor cone is dominated by furniture rather than floor. Fitting anyway is
+    # what produced the s < 0 values in the original run: a clean fit of a model that
+    # maps near pixels to far distances.
+    corr = float(np.corrcoef(x_sub, y_sub)[0, 1])
+    if not np.isfinite(corr) or corr < MIN_GROUND_CORRELATION:
+        raise CalibrationError(
+            f"ground-ray correlation {corr:+.3f} < {MIN_GROUND_CORRELATION:+.2f}; "
+            "disparity map is inverted or the floor cone is occluded. Refusing to fit."
+        )
+
+    # RANSAC: the floor cone contains furniture legs, rugs and table tops that are not
+    # the ground plane. Plain least squares (the original behaviour) lets those outliers
+    # drag the line. Consensus on an inlier band recovers the true floor.
+    best_inliers, best_s, best_t = None, None, None
+    n = len(x_sub)
+    for _ in range(RANSAC_ITERS):
+        i, j = rng.choice(n, 2, replace=False)
+        if abs(x_sub[i] - x_sub[j]) < 1e-3:
+            continue
+        s_c = (y_sub[i] - y_sub[j]) / (x_sub[i] - x_sub[j])
+        t_c = y_sub[i] - s_c * x_sub[i]
+        if s_c <= 0 or t_c < 0:          # enforce physics: near => nearer
+            continue
+        resid = np.abs(y_sub - (s_c * x_sub + t_c))
+        inliers = resid < RANSAC_INLIER_M
+        if best_inliers is None or inliers.sum() > best_inliers.sum():
+            best_inliers, best_s, best_t = inliers, s_c, t_c
+
+    if best_inliers is None or best_inliers.sum() < 0.20 * n:
+        raise CalibrationError("RANSAC found no physically valid ground consensus (s > 0, t >= 0)")
+
+    # Refit least squares on the inlier set only
+    xi, yi = x_sub[best_inliers], y_sub[best_inliers]
+    A = np.vstack([xi, np.ones_like(xi)]).T
+    s, t = np.linalg.lstsq(A, yi, rcond=None)[0]
+
+    if s <= 0:
+        raise CalibrationError(f"refit slope s={s:.4f} <= 0; model inverted")
+
+    # R-squared on the inlier set
+    y_pred = s * xi + t
+    ss_res = np.sum((yi - y_pred) ** 2)
+    ss_tot = np.sum((yi - np.mean(yi)) ** 2)
     r2 = 1.0 - (ss_res / max(ss_tot, 1e-6))
-    
-    print(f"[+] Robust 2-Parameter Ground Fit: y = {s:.4f} * d + ({t:.4f}) [R² = {r2:.3f}]")
-    print(f"[+] Total floor rays fitted: {len(x):,}")
+
+    inlier_frac = best_inliers.sum() / n
+    print(f"[+] RANSAC Ground Fit: y = {s:.4f} * d + ({t:.4f}) [R² = {r2:.3f}, corr = {corr:+.3f}]")
+    print(f"[+] Floor rays: {len(x):,} total, {int(best_inliers.sum()):,} inliers ({inlier_frac:.0%})")
+    if r2 < MIN_ACCEPTABLE_R2:
+        print(f"[!] WARNING: R² {r2:.3f} < {MIN_ACCEPTABLE_R2}; treat this view's scale as UNRELIABLE.")
     return float(s), float(t), float(r2)
 
 
@@ -358,8 +450,23 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
     rgb_eq, disp_eq = run_pinhole_cubemap_depth(orig_img, pipe, face_size=768, out_w=2048, out_h=1024)
     cv2.imwrite(os.path.join(output_dir, "calibrated_disparity.png"), (disp_eq * 255).astype(np.uint8))
     
-    # Step 2: 2-parameter affine regression
-    s, t, r2 = calibrate_affine_scale_and_shift(disp_eq, camera_height=1.50)
+    # Step 2: 2-parameter affine regression.
+    # A view that cannot be honestly calibrated is SKIPPED, not back-filled with a guess.
+    try:
+        s, t, r2 = calibrate_affine_scale_and_shift(disp_eq, camera_height=1.50)
+    except CalibrationError as exc:
+        print(f"[!] {view_id}: calibration FAILED - {exc}")
+        summary = {
+            "view_id": view_id,
+            "heading_deg": heading_deg,
+            "status": "failed",
+            "reason": str(exc),
+            "calibration": None,
+            "measured_dimensions": None,
+        }
+        with open(os.path.join(output_dir, "calibrated_summary.json"), 'w', encoding='utf-8') as f:
+            json.dump(summary, f, indent=2)
+        return summary
     
     # Step 3: Calibrated unprojection
     points, colors = unproject_calibrated(rgb_eq, disp_eq, s, t, camera_height=1.50, max_dist=10.0, heading_deg=heading_deg)
@@ -373,22 +480,40 @@ def process_view(view_id: str, image_path: str, heading_deg: float, pipe, output
     cv2.imwrite(os.path.join(output_dir, "calibrated_bev_wall.png"), wall_img)
     print(f"[+] Saved calibrated BEV wall density: {os.path.join(output_dir, 'calibrated_bev_wall.png')}")
     
-    # Calculate measured room width and length directly from the calibrated point cloud
+    # Calculate measured room width and length directly from the calibrated point cloud.
+    # Use the 1/99 percentile, not 5/95: the walls ARE the extremes of the distribution,
+    # so a 5/95 clip discards the very geometry being measured and shrinks every room by
+    # roughly a tenth of its span before any other error is counted.
     wall_pts = points[(points[:, 1] >= 1.2) & (points[:, 1] <= 2.2)]
-    x_min, x_max = float(np.percentile(wall_pts[:, 0], 5)), float(np.percentile(wall_pts[:, 0], 95))
-    z_min, z_max = float(np.percentile(wall_pts[:, 2], 5)), float(np.percentile(wall_pts[:, 2], 95))
+    if len(wall_pts) < 500:
+        x_min = x_max = z_min = z_max = float('nan')
+    else:
+        x_min, x_max = float(np.percentile(wall_pts[:, 0], 1)), float(np.percentile(wall_pts[:, 0], 99))
+        z_min, z_max = float(np.percentile(wall_pts[:, 2], 1)), float(np.percentile(wall_pts[:, 2], 99))
     
     measured_width = round(x_max - x_min, 2)
     measured_length = round(z_max - z_min, 2)
-    
+
+    # A single panorama sees only what is in line of sight from one tripod position.
+    # Occluded corners and surfaces behind furniture are NOT measured, so this span is a
+    # lower bound on the room, never the authoritative room dimension.
+    reliable = bool(r2 >= MIN_ACCEPTABLE_R2) and np.isfinite(measured_width)
+
     summary = {
         "view_id": view_id,
         "heading_deg": heading_deg,
-        "calibration": {"slope_s": s, "shift_t": t, "r_squared": r2},
+        "status": "ok" if reliable else "low_confidence",
+        "calibration": {
+            "slope_s": s, "shift_t": t, "r_squared": r2,
+            "camera_height_m": 1.50,
+            "camera_height_assumed": True,
+        },
         "measured_dimensions": {
             "x_min": x_min, "x_max": x_max, "width_m": measured_width,
             "z_min": z_min, "z_max": z_max, "length_m": measured_length,
-            "area_m2": round(measured_width * measured_length, 2)
+            "area_m2": round(measured_width * measured_length, 2),
+            "is_lower_bound": True,
+            "note": "Single-viewpoint line-of-sight span; occluded extents not captured.",
         }
     }
     with open(os.path.join(output_dir, "calibrated_summary.json"), 'w', encoding='utf-8') as f:

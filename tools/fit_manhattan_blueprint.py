@@ -15,6 +15,59 @@ import argparse
 import numpy as np
 import ezdxf
 
+def load_calibrated_boxes(spatial_dir, view_to_space, min_r2=0.60):
+    """
+    Collect per-view calibrated fits and group them by space code.
+
+    Returns {space_code: {"box": {...}, "views": [...], "r_squared": float}} containing
+    ONLY spaces backed by at least one reliable fit. Views that failed calibration, fell
+    below min_r2, or carry no measured extent are ignored rather than averaged in.
+
+    Note the resulting box is a union of single-viewpoint line-of-sight spans, so it is a
+    LOWER BOUND on the room: surfaces occluded from every tripod position are not in it.
+    """
+    out = {}
+    if not os.path.isdir(spatial_dir):
+        return out
+    grouped = {}
+    for entry in sorted(os.listdir(spatial_dir)):
+        if not entry.endswith("_calibrated"):
+            continue
+        path = os.path.join(spatial_dir, entry, "calibrated_summary.json")
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                s = json.load(f)
+        except (ValueError, OSError):
+            continue
+        if s.get("status") not in (None, "ok"):
+            continue
+        cal = s.get("calibration") or {}
+        dims = s.get("measured_dimensions") or {}
+        r2 = cal.get("r_squared")
+        if r2 is None or r2 < min_r2:
+            continue
+        if not all(isinstance(dims.get(k), (int, float)) for k in ("x_min", "x_max", "z_min", "z_max")):
+            continue
+        code = view_to_space.get(s.get("view_id"))
+        if not code:
+            continue
+        grouped.setdefault(code, []).append((s["view_id"], dims, float(r2)))
+
+    for code, items in grouped.items():
+        xs0 = min(d["x_min"] for _, d, _ in items)
+        xs1 = max(d["x_max"] for _, d, _ in items)
+        zs0 = min(d["z_min"] for _, d, _ in items)
+        zs1 = max(d["z_max"] for _, d, _ in items)
+        out[code] = {
+            "box": {"x": [round(xs0, 2), round(xs1, 2)], "z": [round(zs0, 2), round(zs1, 2)]},
+            "views": [v for v, _, _ in items],
+            "r_squared": round(min(r for _, _, r in items), 3),
+        }
+    return out
+
+
 def build_architectural_model(spatial_dir="exports/spatial", manifest_path="source/captures/panoramas/tour-manifest.json"):
     """
     Fit orthogonal architectural walls and openings from measured viewpoint point clouds.
@@ -39,10 +92,27 @@ def build_architectural_model(spatial_dir="exports/spatial", manifest_path="sour
         "LH": {"name": "Lecture Hall Entrance", "floor_level": 0.0, "color": "#f59e0b"},
     }
     
-    # Measured inner room boxes from optical point cloud
+    # ------------------------------------------------------------------
+    # PROVENANCE WARNING - READ BEFORE TRUSTING ANY NUMBER BELOW.
+    #
+    # These boxes are HAND-ENTERED ESTIMATES. They are NOT outputs of the depth
+    # pipeline. No calibrated point cloud has ever been fitted to produce them:
+    # the pipeline writes per-view summaries to exports/spatial/<view>_calibrated/,
+    # and nothing in this function reads those files.
+    #
+    # The comment previously here claimed these were "Calibrated via 6-face cubemap
+    # perspective decomposition and 2-parameter (s, t) affine regression". That was
+    # false, and it is how unmeasured guesses reached measured_room_schedule.json,
+    # the DXF/SVG blueprints, the Blender venue and the dashboard - each step
+    # presenting them with more authority than the last.
+    #
+    # Until load_calibrated_boxes() below finds enough reliable per-view fits, the
+    # outputs of this module are a SKETCH, not a survey. They are emitted with
+    # "provenance": "hand_estimate" so no downstream consumer can mistake them.
+    # See docs/MEASUREMENT-STATUS.md.
+    # ------------------------------------------------------------------
     # [x_min, x_max, z_min, z_max] in world meters
-    # Calibrated via 6-face cubemap perspective decomposition and 2-parameter (s, t) affine regression
-    measured_boxes = {
+    estimated_boxes = {
         "TR": {"x": [-1.80, 2.00], "z": [-1.20, 4.20]},
         "TB": {"x": [-5.40, -1.80], "z": [-1.20, 4.20]},
         "PV": {"x": [-4.60, -1.80], "z": [4.20, 7.00]},
@@ -67,17 +137,43 @@ def build_architectural_model(spatial_dir="exports/spatial", manifest_path="sour
         {"from": "ST", "to": "OUT", "line": [(-11.60, 16.60), (-10.40, 16.60)], "label": "D9 (Exterior Street Portal)"},
     ]
     
+    # Prefer real calibrated measurements wherever the depth pipeline produced a
+    # reliable fit; fall back to the hand estimates above, per room, and record which
+    # was used. This is the seam that was missing: the pipeline's own output now has
+    # a path into the blueprint instead of being computed and discarded.
+    calibrated = load_calibrated_boxes(spatial_dir, view_to_space)
+    boxes = {}
+    provenance = {}
+    for code, est in estimated_boxes.items():
+        if code in calibrated:
+            boxes[code] = calibrated[code]["box"]
+            provenance[code] = {
+                "source": "calibrated",
+                "views": calibrated[code]["views"],
+                "r_squared": calibrated[code]["r_squared"],
+                "is_lower_bound": True,
+            }
+        else:
+            boxes[code] = est
+            provenance[code] = {"source": "hand_estimate", "views": [], "r_squared": None}
+
+    n_cal = sum(1 for v in provenance.values() if v["source"] == "calibrated")
+    print(f"[i] Room boxes: {n_cal} calibrated, {len(boxes) - n_cal} hand-estimated")
+    if n_cal == 0:
+        print("[!] NO calibrated measurements available - every dimension below is an ESTIMATE.")
+
     # Compute room schedule
     room_schedule = []
     wall_thickness = 0.20 # 20cm walls
     
-    for code, box in measured_boxes.items():
+    for code, box in boxes.items():
         w = box['x'][1] - box['x'][0]
         l = box['z'][1] - box['z'][0]
         area = w * l
         info = rooms_def.get(code, {"name": code, "floor_level": 0.0})
         room_schedule.append({
             "code": code,
+            "provenance": provenance.get(code, {"source": "hand_estimate"}),
             "name": info["name"],
             "floor_level_m": info["floor_level"],
             "width_m": round(w, 2),
@@ -269,17 +365,31 @@ def main():
     args = parser.parse_args()
 
     room_schedule, doors, wall_thickness = build_architectural_model(args.spatial_dir, args.manifest)
+
+    os.makedirs(args.output_dir, exist_ok=True)
     
-    # 1. Export JSON schedule
-    schedule_json_path = os.path.join(args.output_dir, "measured_room_schedule.json")
+    # 1. Export JSON schedule.
+    # Named "room_schedule", not "measured_room_schedule": per-room provenance decides
+    # what is actually measured, and most rooms are not.
+    n_cal = sum(1 for r in room_schedule if r.get("provenance", {}).get("source") == "calibrated")
+    schedule_json_path = os.path.join(args.output_dir, "room_schedule.json")
     with open(schedule_json_path, 'w', encoding='utf-8') as f:
         json.dump({
             "total_rooms": len(room_schedule),
+            "rooms_calibrated": n_cal,
+            "rooms_hand_estimated": len(room_schedule) - n_cal,
+            "all_dimensions_measured": n_cal == len(room_schedule),
+            "warning": (
+                "Rooms with provenance.source == 'hand_estimate' are NOT measured. "
+                "Calibrated rooms are single-viewpoint lower bounds, not survey dimensions."
+            ),
             "wall_thickness_m": wall_thickness,
+            "wall_thickness_measured": False,
             "rooms": room_schedule,
-            "doors": doors
+            "doors": doors,
+            "doors_measured": False,
         }, f, indent=2)
-    print(f"[+] Exported Measured Room Schedule: {schedule_json_path}")
+    print(f"[+] Exported Room Schedule ({n_cal} calibrated / {len(room_schedule)}): {schedule_json_path}")
     
     # 2. Export Clean CAD DXF
     dxf_path = os.path.join(args.output_dir, "clean_architectural_blueprint.dxf")

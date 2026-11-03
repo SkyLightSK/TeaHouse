@@ -1,4 +1,7 @@
 {
+  "_STALE": true,
+  "_WARNING": "Fit from inverted depth convention (s<0 is unphysical). Superseded; re-run on GPU.",
+  "status": "invalid_superseded",
   "view_id": "view-05",
   "heading_deg": 60.24,
   "calibration": {
