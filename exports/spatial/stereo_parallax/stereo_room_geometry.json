@@ -1,0 +1,23 @@
+{
+  "method": "Multi-View Epipolar Parallax Triangulation",
+  "stations": [
+    "view-01",
+    "view-03"
+  ],
+  "baseline_meters": 2.2,
+  "total_triangulated_landmarks": 732,
+  "measured_bounds": {
+    "x_west": -1.1169931528994403,
+    "x_east": 3.3397985206736127,
+    "z_south": -1.2396006668405213,
+    "z_pilaster": 4.4963317460369066,
+    "z_alcove": 4.483300297585577
+  },
+  "dimensions": {
+    "width_m": 4.46,
+    "width_at_pilaster_m": 4.01,
+    "length_m": 5.72,
+    "pilaster_bump_cm": -1.3,
+    "net_area_m2": 25.51
+  }
+}
