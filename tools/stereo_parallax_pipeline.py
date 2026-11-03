@@ -127,16 +127,39 @@ def main():
             if d1 is None or d3 is None or len(kp1) < 10 or len(kp3) < 10:
                 continue
                 
-            matches = matcher.knnMatch(d1, d3, k=2)
-            good = [m for m, n in matches if m.distance < 0.70 * n.distance]
+            # 1. Bidirectional mutual nearest-neighbor match with Lowe's ratio test
+            m12 = matcher.knnMatch(d1, d3, k=2)
+            good12 = {m.queryIdx: m for m, n in m12 if m.distance < 0.68 * n.distance}
             
-            # Save visualizer sample for North wall (yw=0, pitch=0)
+            m21 = matcher.knnMatch(d3, d1, k=2)
+            good21 = {m.queryIdx: m for m, n in m21 if m.distance < 0.68 * n.distance}
+            
+            mutual = []
+            for idx1, m in good12.items():
+                if m.trainIdx in good21 and good21[m.trainIdx].trainIdx == idx1:
+                    mutual.append(m)
+                    
+            if len(mutual) < 8:
+                continue
+                
+            # 2. Geometric Epipolar Verification via Fundamental Matrix RANSAC
+            pts1 = np.float32([kp1[m.queryIdx].pt for m in mutual])
+            pts3 = np.float32([kp3[m.trainIdx].pt for m in mutual])
+            F, mask = cv2.findFundamentalMat(pts1, pts3, cv2.FM_RANSAC, ransacReprojThreshold=2.0, confidence=0.999)
+            if mask is None:
+                continue
+                
+            inliers = [m for m, val in zip(mutual, mask.ravel()) if val == 1]
+            if len(inliers) < 5:
+                continue
+            
+            # Save visualizer sample for North wall (yw=0, pitch=0) using strictly verified inliers
             if yw == 0 and pitch == 0.0 and sample_vis_matches is None:
                 sample_vis_crop1 = c1
                 sample_vis_crop3 = c3
                 sample_vis_kp1 = kp1
                 sample_vis_kp3 = kp3
-                sample_vis_matches = good[:50]
+                sample_vis_matches = inliers[:40]
                 
             Ry_w = np.array([
                 [ np.cos(np.radians(yw)), 0, np.sin(np.radians(yw))],
@@ -150,7 +173,7 @@ def main():
             ])
             R_w = Ry_w @ Rx_w
             
-            for m in good:
+            for m in inliers:
                 u1, v1 = kp1[m.queryIdx].pt
                 u3, v3 = kp3[m.trainIdx].pt
                 
@@ -162,7 +185,7 @@ def main():
                 
                 if parallax > 0.8:
                     pt, err = triangulate_two_rays(r1, r3, T_unit)
-                    if pt is not None and err < 0.04 * np.linalg.norm(pt):
+                    if pt is not None and err < 0.03 * np.linalg.norm(pt):
                         all_pts_3d.append(pt)
                         all_rays1.append(r1)
                         all_rays3.append(r3)
